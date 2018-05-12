@@ -170,13 +170,13 @@ package body TCG.Outputs.PDF is
       C : Palette.ARGB_Color;
    begin
 
-      for PX in 0 .. Tilesets.Tile_Width - 1 loop
-         for PY in 0 .. Tilesets.Tile_Height - 1 loop
-            C := Tilesets.Pix (Id, PX, (Tilesets.Tile_Height - 1 - PY));
+      for PX in 1 .. Tilesets.Tile_Width loop
+         for PY in 1 .. Tilesets.Tile_Height loop
+            C := Tilesets.Pix (Id, PX, (Tilesets.Tile_Height - PY + 1));
             if C /= Palette.Transparent then
                Draw_Square (Outfile,
-                            (Rect.x_min + Real (PX) * Pix_W,
-                             Rect.y_min + Real (PY) * Pix_H,
+                            (Rect.x_min + Real (PX - 1) * Pix_W,
+                             Rect.y_min + Real (PY - 1) * Pix_H,
                              Pix_W, Pix_H),
                             Convert (C));
             end if;
@@ -277,8 +277,8 @@ package body TCG.Outputs.PDF is
 
                if T_Id /= Tilesets.No_Tile then
                   C := Tilesets.Pix (T_Id,
-                                     X mod Tile_Width,
-                                     Y mod Tile_Height);
+                                     1 + X mod Tile_Width,
+                                     1 + Y mod Tile_Height);
                end if;
 
                if C /= Palette.Transparent then

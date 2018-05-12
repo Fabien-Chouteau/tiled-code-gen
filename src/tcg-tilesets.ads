@@ -88,25 +88,25 @@ package TCG.Tilesets is
    function Last_Id return Master_Tile_Id;
    --  Return the last valid Master_Tile_Id
 
-   function Tile_Width return  Natural;
+   function Tile_Width return  Positive;
    --  Width of tiles in the master set. Returns 0 if not tile set are loaded.
 
-   function Tile_Height return Natural;
+   function Tile_Height return Positive;
    --  Height of tiles in the master set. Returns 0 if not tile set are loaded.
 
    function Pix (T    : Master_Tile_Id;
-                 X, Y : Natural)
+                 X, Y : Positive)
                  return Palette.ARGB_Color
      with Pre => T /= No_Tile
-     and then X in 0 .. Tile_Width - 1
-     and then Y in 0 .. Tile_Height - 1;
+     and then X <= Tile_Width
+     and then Y <= Tile_Height;
 
    function Pix (T    : Master_Tile_Id;
-                 X, Y : Natural)
+                 X, Y : Positive)
                  return Palette.Color_Id
      with Pre => T /= No_Tile
-     and then X in 0 .. Tile_Width - 1
-     and then Y in 0 .. Tile_Height - 1;
+     and then X <= Tile_Width
+     and then Y <= Tile_Height;
 
    procedure Put;
 
@@ -114,9 +114,13 @@ private
 
    type String_Access is access all String;
 
-   type Tile_Data is array (Natural range <>,
-                            Natural range <>) of
+   type Tile_Pix is array (Positive range <>,
+                           Positive range <>) of
      TCG.Palette.Color_Id;
+
+   type Tile_Data (Width, Height : Positive) is record
+      Pixels    : Tile_Pix (1 .. Width, 1 .. Height);
+   end record;
 
    type Tile_Data_Acc is access all Tile_Data;
 

@@ -138,8 +138,8 @@ package body TCG.Tilesets is
 
          Mast_Id := This.First_Master_Tile + Master_Tile_Id (Loc_Id);
 
-         Master_Tileset (Mast_Id) (X mod Tile_Width,
-                                   Y mod Tile_Height) := Id;
+         Master_Tileset (Mast_Id).Pixels (1 + X mod Tile_Width,
+                                          1 + Y mod Tile_Height) := Id;
 
          if Current_X < Width - 1 then
             Current_X := Current_X + 1;
@@ -180,8 +180,7 @@ package body TCG.Tilesets is
       --  Allocate the new tiles
       This.First_Master_Tile := Master_Tileset.Last_Index + 1;
       for Cnt in 1 .. This.Number_Of_Tiles loop
-         Master_Tileset.Append (new Tile_Data'(0 .. Tile_Width - 1 =>
-                                               (0 .. Tile_Height - 1 => <>)));
+         Master_Tileset.Append (new Tile_Data (Tile_Width, Tile_Height));
       end loop;
 
       This.Source := new String'(Source);
@@ -308,14 +307,14 @@ package body TCG.Tilesets is
    -- Tile_Width --
    ----------------
 
-   function Tile_Width return Natural
+   function Tile_Width return Positive
    is (M_Tile_Width);
 
    -----------------
    -- Tile_Height --
    -----------------
 
-   function Tile_Height return Natural
+   function Tile_Height return Positive
    is (M_Tile_Height);
 
    ---------
@@ -323,7 +322,7 @@ package body TCG.Tilesets is
    ---------
 
    function Pix (T : Master_Tile_Id;
-                 X, Y : Natural)
+                 X, Y : Positive)
                  return Palette.ARGB_Color
    is (Palette.Convert (Pix (T, X, Y)));
 
@@ -332,9 +331,9 @@ package body TCG.Tilesets is
    ---------
 
    function Pix (T    : Master_Tile_Id;
-                 X, Y : Natural)
+                 X, Y : Positive)
                  return Palette.Color_Id
-   is (Master_Tileset.Element (T) (X, Y));
+   is (Master_Tileset.Element (T).Pixels (X, Y));
 
    ---------
    -- Put --
@@ -358,7 +357,8 @@ package body TCG.Tilesets is
          Put_Line ("Tile" & To_Index (Cur)'Img & ":");
          for Y in 0 .. Tile_Height - 1 loop
             for X in 1 .. Tile_Width - 1 loop
-               Put (Palette.Image (Tile_Data_Vect.Element (Cur) (X, Y)));
+               Put (Palette.Image
+                    (Tile_Data_Vect.Element (Cur).Pixels (X, Y)));
             end loop;
             New_Line;
          end loop;

@@ -96,21 +96,21 @@ package body TCG.Outputs.GESTE is
       for Id in Tilesets.First_Id .. Tilesets.Last_Id loop
          if Id /= Tilesets.No_Tile then
             P ("     " & Id'Img & " => (");
-            for X in 0 .. Tilesets.Tile_Width - 1 loop
+            for X in 1 .. Tilesets.Tile_Width loop
 
-               if X /= 0 then
+               if X /= 1 then
                   P ("             ");
                end if;
                P ("(");
 
-               for Y in 0 .. Tilesets.Tile_Height - 1 loop
+               for Y in 1 .. Tilesets.Tile_Height loop
                   P (Palette.Color_Id'Image ((Tilesets.Pix (Id, X, Y))));
-                  if Y /=  Tilesets.Tile_Height - 1  then
+                  if Y /= Tilesets.Tile_Height then
                      P (",");
                   end if;
                end loop;
                P (")");
-               if X /=  Tilesets.Tile_Width - 1  then
+               if X /= Tilesets.Tile_Width then
                   PL (",");
                else
                   P (")");

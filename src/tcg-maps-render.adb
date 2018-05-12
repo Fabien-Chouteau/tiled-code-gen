@@ -145,8 +145,8 @@ package body TCG.Maps.Render is
 
                if T_Id /= No_Tile then
                   RGB_Pix := Tilesets.Pix (T_Id,
-                                           X mod Tile_Width,
-                                           Y mod Tile_Height);
+                                           1 + X mod Tile_Width,
+                                           1 + Y mod Tile_Height);
                end if;
 
                exit when RGB_Pix /= Palette.Transparent;
