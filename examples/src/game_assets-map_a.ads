@@ -11,7 +11,7 @@ package Game_Assets.map_a is
    package Tile_Layer_1 is
       Width  : constant :=  10;
       Height : constant :=  10;
-      Data   : aliased constant Engine.Grid_Data :=
+      Data   : aliased Engine.Grid_Data :=
         (( 0, 0, 0, 0, 0, 0, 11, 18, 1, 7),
          ( 0, 0, 0, 0, 0, 72, 2, 8, 8, 8),
          ( 0, 0, 0, 0, 0, 0, 2, 8, 8, 8),
@@ -28,7 +28,7 @@ package Game_Assets.map_a is
    package Tile_Layer_2 is
       Width  : constant :=  10;
       Height : constant :=  10;
-      Data   : aliased constant Engine.Grid_Data :=
+      Data   : aliased Engine.Grid_Data :=
         (( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
          ( 0, 40, 0, 0, 0, 0, 78, 78, 0, 0),
          ( 0, 41, 0, 0, 0, 0, 0, 0, 0, 0),

@@ -35,6 +35,7 @@
 with TCG.Palette;
 
 private with Ada.Containers.Vectors;
+private with TCG.Collision_Objects;
 
 package TCG.Tilesets is
 
@@ -108,6 +109,17 @@ package TCG.Tilesets is
      and then X <= Tile_Width
      and then Y <= Tile_Height;
 
+   function Has_Collision (T : Master_Tile_Id)
+                           return Boolean
+     with Pre => T /= No_Tile;
+
+   function Collision (T    : Master_Tile_Id;
+                       X, Y : Positive)
+                       return Boolean
+     with Pre => T /= No_Tile
+     and then X <= Tile_Width
+     and then Y <= Tile_Height;
+
    procedure Put;
 
 private
@@ -119,7 +131,8 @@ private
      TCG.Palette.Color_Id;
 
    type Tile_Data (Width, Height : Positive) is record
-      Pixels    : Tile_Pix (1 .. Width, 1 .. Height);
+      Pixels     : Tile_Pix (1 .. Width, 1 .. Height);
+      Collisions : TCG.Collision_Objects.Collisions;
    end record;
 
    type Tile_Data_Acc is access all Tile_Data;

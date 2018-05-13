@@ -310,7 +310,7 @@ package body TCG.Maps is
             PL ("   package " & Layer_Ada_Id & " is");
             PL ("      Width  : constant := " & Layers.Width (L)'Img & ";");
             PL ("      Height : constant := " & Layers.Width (L)'Img & ";");
-            PL ("      Data   : aliased constant Engine.Grid_Data :=");
+            PL ("      Data   : aliased Engine.Grid_Data :=");
             P  ("        (");
 
             for X in 1 .. Layers.Width (L) loop

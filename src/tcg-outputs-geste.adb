@@ -47,6 +47,9 @@ package body TCG.Outputs.GESTE is
    procedure Generate_Tileset (Filepath     : String;
                                Package_Name : String);
 
+   procedure Generate_Tileset_Collisions (Filepath     : String;
+                                          Package_Name : String);
+
    procedure Generate_Types (Output : File_Type;
                              Format : Palette.Output_Color_Format);
 
@@ -129,6 +132,79 @@ package body TCG.Outputs.GESTE is
 
       Close (Output);
    end Generate_Tileset;
+
+   procedure Generate_Tileset_Collisions (Filepath     : String;
+                                          Package_Name : String)
+   is
+      Output : Ada.Text_IO.File_Type;
+
+      procedure P (Str : String);
+      procedure PL (Str : String);
+      procedure NL;
+
+      procedure P (Str : String) is
+      begin
+         Put (Output, Str);
+      end P;
+
+      procedure PL (Str : String) is
+      begin
+         Put_Line (Output, Str);
+      end PL;
+
+      procedure NL is
+      begin
+         New_Line (Output);
+      end NL;
+   begin
+      Create (Output, Out_File, Filepath);
+      PL ("pragma Style_Checks (Off);");
+      PL ("package " & Package_Name & " is");
+      NL;
+      PL ("   Tiles : aliased constant Engine.Tile_Collisions_Array :=");
+      PL ("     (");
+
+      for Id in Tilesets.First_Id .. Tilesets.Last_Id loop
+         if Id /= Tilesets.No_Tile then
+            P ("     " & Id'Img & " => (");
+            for X in 1 .. Tilesets.Tile_Width loop
+
+               if X /= 1 then
+                  P ("             ");
+               end if;
+               P ("(");
+
+               for Y in 1 .. Tilesets.Tile_Height loop
+
+                  P (if Tilesets.Collision (Id, X, Y) then
+                        "True"
+                     else
+                        "False");
+
+                  if Y /= Tilesets.Tile_Height then
+                     P (",");
+                  end if;
+               end loop;
+               P (")");
+               if X /= Tilesets.Tile_Width then
+                  PL (",");
+               else
+                  P (")");
+               end if;
+            end loop;
+
+            if Id /= Tilesets.Last_Id then
+               PL (",");
+            else
+               PL (");");
+            end if;
+         end if;
+      end loop;
+
+      PL ("end " & Package_Name & ";");
+
+      Close (Output);
+   end Generate_Tileset_Collisions;
 
    --------------------
    -- Generate_Types --
@@ -260,6 +336,15 @@ package body TCG.Outputs.GESTE is
            Compose (Directory, To_Ada_Filename (Package_Name));
       begin
          Generate_Tileset (Filename, Package_Name);
+      end;
+
+      declare
+         Package_Name : constant String :=
+           Root_Package_Name & ".Tileset_Collisions";
+         Filename     : constant String :=
+           Compose (Directory, To_Ada_Filename (Package_Name));
+      begin
+         Generate_Tileset_Collisions (Filename, Package_Name);
       end;
 
       for Map of Map_List loop

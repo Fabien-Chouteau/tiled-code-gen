@@ -64,6 +64,15 @@ package body TCG.Outputs.PDF is
                                  Tile_Size      : Real := 130.0;
                                  Tiles_Per_Line : Natural := 2);
 
+   procedure Draw_Tile_Collision
+     (Outfile : in out PDF_Out_File;
+      Id      : Tilesets.Master_Tile_Id;
+      Rect    : Rectangle);
+   procedure Put_Master_Tileset_Collisions
+     (Outfile        : in out PDF_Out_File;
+      Tile_Size      : Real := 130.0;
+      Tiles_Per_Line : Natural := 2);
+
    procedure Put_Map (Outfile : in out PDF_Out_File;
                       M       : Maps.Map);
 
@@ -243,6 +252,91 @@ package body TCG.Outputs.PDF is
       end loop;
    end Put_Master_Tileset;
 
+   -------------------------
+   -- Draw_Tile_Collision --
+   -------------------------
+
+   procedure Draw_Tile_Collision (Outfile : in out PDF_Out_File;
+                                  Id      : Tilesets.Master_Tile_Id;
+                                  Rect    : Rectangle)
+   is
+      Pix_W : constant Real := Rect.width / Real (Tilesets.Tile_Width);
+      Pix_H : constant Real := Rect.height / Real (Tilesets.Tile_Height);
+   begin
+
+      for PX in 1 .. Tilesets.Tile_Width loop
+         for PY in 1 .. Tilesets.Tile_Height loop
+            if Tilesets.Collision (Id, PX, (Tilesets.Tile_Height - PY + 1))
+            then
+               Draw_Square (Outfile,
+                            (Rect.x_min + Real (PX - 1) * Pix_W,
+                             Rect.y_min + Real (PY - 1) * Pix_H,
+                             Pix_W, Pix_H),
+                            (1.0, 0.0, 0.0));
+            end if;
+         end loop;
+      end loop;
+   end Draw_Tile_Collision;
+
+   -----------------------------------
+   -- Put_Master_Tileset_Collisions --
+   -----------------------------------
+
+   procedure Put_Master_Tileset_Collisions
+     (Outfile        : in out PDF_Out_File;
+      Tile_Size      : Real := 130.0;
+      Tiles_Per_Line : Natural := 2)
+   is
+      Layout : constant Rectangle := PDF_Out.Layout (Outfile);
+
+      Top_Margin : constant Real := 100.0;
+      Left_Margin : constant Real := 50.0;
+
+      Spacing  : constant Real :=
+        (Layout.width - Left_Margin) / Real (Tiles_Per_Line);
+
+      X : Real := Layout.x_min + Left_Margin;
+      Y : Real := Layout.y_min + Layout.height - Tile_Size - Top_Margin;
+
+      Cnt : Natural := 1;
+   begin
+      Font_Size (Outfile, 40.0);
+      Put_Line (Outfile, "Tileset collisions");
+      Font_Size (Outfile, 12.0);
+
+      for Id in Tilesets.First_Id .. Tilesets.Last_Id loop
+         if Id /= Tilesets.No_Tile then
+            Draw_Tile_Collision (Outfile, Id, (X, Y, Tile_Size, Tile_Size));
+         end if;
+
+         Color (Outfile, PDF_Out.black);
+         Draw (Outfile, (X, Y, Tile_Size, Tile_Size), stroke);
+
+         Put_XY (Outfile,
+                 X + Tile_Size * 1.1,
+                 Y + Tile_Size * 0.8,
+                 "Tile #" & Id'Img);
+         New_Line (Outfile);
+         if Id = Tilesets.No_Tile then
+            Put_Line (Outfile, "No tile");
+         end if;
+         New_Line (Outfile);
+
+         if Cnt mod Tiles_Per_Line = 0 then
+            Y := Y - (Tile_Size + 20.0);
+            X := Layout.x_min + Left_Margin;
+
+            if Y <= Top_Margin then
+               New_Page (Outfile);
+               Y := Layout.y_min + Layout.height - Tile_Size - Top_Margin;
+            end if;
+         else
+            X := X + Spacing;
+         end if;
+         Cnt := Cnt + 1;
+      end loop;
+   end Put_Master_Tileset_Collisions;
+
    -------------
    -- Put_Map --
    -------------
@@ -338,6 +432,11 @@ package body TCG.Outputs.PDF is
       Put_Master_Tileset (Outfile,
                           Tile_Size      => 50.0,
                           Tiles_Per_Line => 5);
+
+      New_Page (Outfile);
+      Put_Master_Tileset_Collisions (Outfile,
+                                     Tile_Size      => 50.0,
+                                     Tiles_Per_Line => 5);
 
       for M of Map_List loop
          Put_Map (Outfile, M);

@@ -1,5 +1,6 @@
 with "xmlada";
 with "apdf/pdf_out_gnat";
+with "gnatcoll";
 
 project Tiled_Code_Gen is
 

@@ -36,6 +36,8 @@ with DOM.Core; use DOM.Core;
 
 package TCG.Utils is
 
+   function Item_Exists (N : Node; Item : DOM_String) return Boolean;
+
    function Item_As_Natural (N : Node; Item : DOM_String) return Natural;
 
    function Item_As_String (N : Node; Item : DOM_String) return String;

@@ -62,6 +62,13 @@ package body TCG.Utils is
           when '.' => '-',
           when others => '_');
 
+   -----------------
+   -- Item_Exists --
+   -----------------
+
+   function Item_Exists (N : Node; Item : DOM_String) return Boolean
+   is (Get_Named_Item (Attributes (N), Item) /= null);
+
    ---------------------
    -- Item_As_Natural --
    ---------------------

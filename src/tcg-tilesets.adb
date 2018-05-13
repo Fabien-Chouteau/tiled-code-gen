@@ -36,8 +36,9 @@ with Ada.Text_IO;     use Ada.Text_IO;
 with Ada.Directories; use Ada.Directories;
 with Ada.Calendar;
 
-with TCG.Palette;        use TCG.Palette;
-with TCG.Utils;          use TCG.Utils;
+with TCG.Palette;           use TCG.Palette;
+with TCG.Utils;             use TCG.Utils;
+with TCG.Collision_Objects; use TCG.Collision_Objects;
 
 with Input_Sources.File; use Input_Sources.File;
 with Sax.Readers;        use Sax.Readers;
@@ -55,6 +56,9 @@ package body TCG.Tilesets is
    procedure Load_Data (This     : in out Local_Tileset;
                         Base_Dir : String;
                         N        : Node);
+
+   procedure Load_Collisions (This : in out Local_Tileset;
+                              Doc  : Document);
 
    ------------
    -- Create --
@@ -198,6 +202,36 @@ package body TCG.Tilesets is
 
    end Load_Data;
 
+   ---------------------
+   -- Load_Collisions --
+   ---------------------
+
+   procedure Load_Collisions (This : in out Local_Tileset;
+                              Doc  : Document)
+   is
+      List : Node_List;
+      N    : Node;
+   begin
+      List := Get_Elements_By_Tag_Name (Doc, "tile");
+
+      for Index in 1 .. Length (List) loop
+         N := Item (List, Index - 1);
+         declare
+            Id   : constant Natural := Item_As_Natural (N, "id");
+            M_Id : Master_Tile_Id;
+         begin
+            if Id < This.Number_Of_Tiles then
+
+               M_Id := This.First_Master_Tile + Master_Tile_Id (Id);
+
+               Load (Master_Tileset.Element (M_Id).Collisions, N);
+            end if;
+         end;
+      end loop;
+
+      Free (List);
+   end Load_Collisions;
+
    ----------
    -- Load --
    ----------
@@ -253,6 +287,8 @@ package body TCG.Tilesets is
       Load_Data (TS, Dir, N);
 
       Free (List);
+
+      Load_Collisions (TS, Doc);
 
       Free (Reader);
 
@@ -334,6 +370,25 @@ package body TCG.Tilesets is
                  X, Y : Positive)
                  return Palette.Color_Id
    is (Master_Tileset.Element (T).Pixels (X, Y));
+
+   -------------------
+   -- Has_Collision --
+   -------------------
+
+   function Has_Collision (T : Master_Tile_Id)
+                           return Boolean
+   is (Has_Collision (Master_Tileset.Element (T).Collisions));
+
+   ---------------
+   -- Collision --
+   ---------------
+
+   function Collision (T    : Master_Tile_Id;
+                       X, Y : Positive)
+                       return Boolean
+   is (Collide (Master_Tileset.Element (T).Collisions,
+                Float (X) - 0.5,
+                Float (Y) - 0.5));
 
    ---------
    -- Put --
