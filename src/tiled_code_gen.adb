@@ -42,10 +42,12 @@ with TCG.Maps.Render;
 with TCG.Maps.List;
 with TCG.Outputs.PDF;
 with TCG.Outputs.GESTE;
+with TCG.Tilesets;
 use TCG;
 
 with GNAT.Command_Line;         use GNAT.Command_Line;
 with GNAT.Strings;              use GNAT.Strings;
+with GNATCOLL.Utils;            use GNATCOLL.Utils;
 
 procedure Tiled_Code_Gen is
 
@@ -60,6 +62,9 @@ procedure Tiled_Code_Gen is
    Color_Format_Str : aliased String_Access := new String'("RGB565");
    Color_Format     : Palette.Output_Color_Format;
    Root_Package     : aliased String_Access := new String'("Game_Assets");
+
+   Tileset          : Tilesets.Tileset_Id := Tilesets.Invalid_Tileset;
+   use type Tilesets.Tileset_Id;
 begin
 
    declare
@@ -106,7 +111,7 @@ begin
 
       Set_Usage
         (Config,
-         "[switches] MAPS...",
+         "[switches] maps (.tmx) or tilesets (.tsx)",
          "Tiled-Code-Gen, a code generator for Tiled the map editor");
 
       Getopt (Config);
@@ -132,14 +137,22 @@ begin
    --  Processing each Tiled maps
    loop
       declare
-         Arg : constant String := Get_Argument (Do_Expansion => True);
+         Arg    : constant String := Get_Argument (Do_Expansion => True);
       begin
          exit when Arg'Length = 0;
-         List.Append (TCG.Maps.Load (Arg, Base_Name (Arg)));
+         if Ends_With (Arg, ".tmx") then
+            List.Append (TCG.Maps.Load (Arg, Base_Name (Arg)));
+         elsif Ends_With (Arg, ".tsx") then
+            Tileset := Tilesets.Load (Arg);
+         else
+            Ada.Text_IO.Put_Line
+              (Ada.Text_IO.Standard_Error,
+               "Unknown file format: '" & Arg & "'");
+         end if;
       end;
    end loop;
 
-   if List.Is_Empty then
+   if List.Is_Empty and then Tileset = Tilesets.Invalid_Tileset then
       Display_Help (Config);
       return;
    end if;
