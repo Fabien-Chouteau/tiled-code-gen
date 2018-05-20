@@ -1,3 +1,4 @@
+with GESTE;
 pragma Style_Checks (Off);
 package Game_Assets.map_b is
 
@@ -11,7 +12,7 @@ package Game_Assets.map_b is
    package Tile_Layer_1 is
       Width  : constant :=  20;
       Height : constant :=  20;
-      Data   : aliased Engine.Grid_Data :=
+      Data   : aliased GESTE.Grid_Data :=
         (( 0, 0, 0, 0, 0, 0, 0, 18, 1, 7),
          ( 0, 0, 0, 0, 0, 0, 0, 0, 2, 8),
          ( 0, 0, 0, 0, 0, 0, 2, 8, 2, 8),
@@ -38,7 +39,7 @@ package Game_Assets.map_b is
    package Tile_Layer_2 is
       Width  : constant :=  20;
       Height : constant :=  20;
-      Data   : aliased Engine.Grid_Data :=
+      Data   : aliased GESTE.Grid_Data :=
         (( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
          ( 0, 0, 0, 0, 0, 0, 11, 0, 0, 0),
          ( 0, 40, 0, 0, 0, 72, 78, 78, 0, 0),

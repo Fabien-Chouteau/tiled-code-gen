@@ -1,7 +1,8 @@
+with GESTE;
 pragma Style_Checks (Off);
 package Game_Assets.Tileset_Collisions is
 
-   Tiles : aliased constant Engine.Tile_Collisions_Array :=
+   Tiles : aliased constant GESTE.Tile_Collisions_Array :=
      (
       1 => ((False,False,False,False,False,False,False,False,False,False,False,False,False,False,False,False),
              (True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True),

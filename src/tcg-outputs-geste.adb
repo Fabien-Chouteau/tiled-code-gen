@@ -50,11 +50,10 @@ package body TCG.Outputs.GESTE is
    procedure Generate_Tileset_Collisions (Filepath     : String;
                                           Package_Name : String);
 
-   procedure Generate_Types (Output : File_Type;
-                             Format : Palette.Output_Color_Format);
-
-   procedure Generate_Palette (Output : File_Type;
-                               Format : Palette.Output_Color_Format);
+   procedure Generate_GESET_Config
+     (Filename     : String;
+      Package_Name : String;
+      Format       : Palette.Output_Color_Format);
 
    procedure Generate_Root_Package
      (Filename     : String;
@@ -90,10 +89,11 @@ package body TCG.Outputs.GESTE is
       end NL;
    begin
       Create (Output, Out_File, Filepath);
+      PL ("with GESTE;");
       PL ("pragma Style_Checks (Off);");
       PL ("package " & Package_Name & " is");
       NL;
-      PL ("   Tiles : aliased constant Engine.Tile_Array :=");
+      PL ("   Tiles : aliased constant GESTE.Tile_Array :=");
       PL ("     (");
 
       for Id in Tilesets.First_Id .. Tilesets.Last_Id loop
@@ -158,10 +158,11 @@ package body TCG.Outputs.GESTE is
       end NL;
    begin
       Create (Output, Out_File, Filepath);
+      PL ("with GESTE;");
       PL ("pragma Style_Checks (Off);");
       PL ("package " & Package_Name & " is");
       NL;
-      PL ("   Tiles : aliased constant Engine.Tile_Collisions_Array :=");
+      PL ("   Tiles : aliased constant GESTE.Tile_Collisions_Array :=");
       PL ("     (");
 
       for Id in Tilesets.First_Id .. Tilesets.Last_Id loop
@@ -206,14 +207,24 @@ package body TCG.Outputs.GESTE is
       Close (Output);
    end Generate_Tileset_Collisions;
 
-   --------------------
-   -- Generate_Types --
-   --------------------
+   ---------------------------
+   -- Generate_GESET_Config --
+   ---------------------------
 
-   procedure Generate_Types (Output : File_Type;
-                             Format : Palette.Output_Color_Format)
+   procedure Generate_GESET_Config
+     (Filename     : String;
+      Package_Name : String;
+      Format       : Palette.Output_Color_Format)
    is
+      Output : File_Type;
    begin
+      Create (Output, Out_File, Filename);
+
+      Put_Line (Output, "with Interfaces;");
+      New_Line (Output);
+      Put_Line (Output, "package " & Package_Name & " is");
+      New_Line (Output);
+
       Put_Line (Output, "   type Color_Index is range " &
                   Palette.First_Id'Img & " .. " &
                   Palette.Last_Id'Img & ";");
@@ -226,43 +237,35 @@ package body TCG.Outputs.GESTE is
             Put_Line (Output, "      A, R, G, B : Component;");
             Put_Line (Output, "   end record;");
          when Palette.RGB565 =>
-            Put_Line (Output, "   type Output_Color is mod 2**16");
-            Put_Line (Output, "     with Size => 16;");
+            Put_Line (Output,
+                      "   subtype Output_Color is Interfaces.Unsigned_16;");
       end case;
 
       New_Line (Output);
       Put_Line (Output, "   Transparent : constant Output_Color := " &
                   Palette.Image (Palette.Transparent, Format) & ";");
-   end Generate_Types;
 
-   ----------------------
-   -- Generate_Palette --
-   ----------------------
-
-   procedure Generate_Palette (Output : File_Type;
-                               Format : Palette.Output_Color_Format)
-   is
-   begin
       New_Line (Output);
-      Put_Line (Output, "   Palette : aliased Engine.Palette_Type := (");
-      for Id in Palette.First_Id .. Palette.Last_Id loop
-         Put (Output, "     " & Id'Img & " => " &
-                Palette.Image (Palette.Convert (Id), Format));
+      Put_Line (Output, "   Tile_Size : constant := " &
+                  Tilesets.Tile_Width'Img & ";");
 
-         if Id /= Palette.Last_Id then
-            Put_Line (Output, ",");
-         end if;
-      end loop;
-      Put_Line (Output, ");");
-   end Generate_Palette;
+      New_Line (Output);
+      Put_Line (Output, "   type Tile_Index is range 0 .."  &
+                  Tilesets.Number_Of_Tiles'Img & ";");
+
+      Put_Line (Output, "   No_Tile : constant Tile_Index := 0;");
+      Put_Line (Output, "end " & Package_Name & ";");
+      Close (Output);
+   end Generate_GESET_Config;
 
    ---------------------------
    -- Generate_Root_Package --
    ---------------------------
 
-   procedure Generate_Root_Package (Filename     : String;
-                                    Package_Name : String;
-                                    Format       : Palette.Output_Color_Format)
+   procedure Generate_Root_Package
+     (Filename     : String;
+      Package_Name : String;
+      Format       : Palette.Output_Color_Format)
    is
       Output : File_Type;
    begin
@@ -274,27 +277,17 @@ package body TCG.Outputs.GESTE is
       Put_Line (Output, "package " & Package_Name & " is");
       New_Line (Output);
 
-      Generate_Types (Output, Format);
-
       New_Line (Output);
-      Put_Line (Output, "   Tile_Size : constant := " &
-                  Tilesets.Tile_Width'Img & ";");
+      Put_Line (Output, "   Palette : aliased GESTE.Palette_Type := (");
+      for Id in Palette.First_Id .. Palette.Last_Id loop
+         Put (Output, "     " & Id'Img & " => " &
+                Palette.Image (Palette.Convert (Id), Format));
 
-      New_Line (Output);
-      Put_Line (Output, "   type Tile_Index is range 0 .."  &
-                  Tilesets.Number_Of_Tiles'Img & ";");
-
-      New_Line (Output);
-      Put_Line (Output, "   package Engine is new GESTE");
-      Put_Line (Output, "     (Output_Color => Output_Color,");
-      Put_Line (Output, "      Color_Index  => Color_Index,");
-      Put_Line (Output, "      Tile_Index   => Tile_Index,");
-      Put_Line (Output, "      Tile_Size    => Tile_Size,");
-      Put_Line (Output, "      No_Tile      => Tile_Index'First,");
-      Put_Line (Output, "      Transparent  => Transparent);");
-      New_Line (Output);
-
-      Generate_Palette (Output, Format);
+         if Id /= Palette.Last_Id then
+            Put_Line (Output, ",");
+         end if;
+      end loop;
+      Put_Line (Output, ");");
 
       Put_Line (Output, "end " & Package_Name & ";");
       Close (Output);
@@ -323,11 +316,19 @@ package body TCG.Outputs.GESTE is
       end if;
 
       declare
+         Package_Name : constant String := "GESTE_Config";
+         Filename     : constant String :=
+           Compose (Directory, To_Ada_Filename (Package_Name));
+      begin
+         Generate_GESET_Config (Filename, Package_Name, Format);
+      end;
+
+      declare
          Package_Name : constant String := Root_Package_Name;
          Filename     : constant String :=
            Compose (Directory, To_Ada_Filename (Package_Name));
       begin
-         Generate_Root_Package (Filename, Root_Package_Name, Format);
+         Generate_Root_Package (Filename, Package_Name, Format);
       end;
 
       declare

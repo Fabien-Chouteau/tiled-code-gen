@@ -1,7 +1,8 @@
+with GESTE;
 pragma Style_Checks (Off);
 package Game_Assets.Tileset is
 
-   Tiles : aliased constant Engine.Tile_Array :=
+   Tiles : aliased constant GESTE.Tile_Array :=
      (
       1 => (( 0, 0, 1, 2, 2, 0, 0, 4, 5, 5, 0, 0, 0, 0, 0, 0),
              ( 0, 1, 2, 2, 6, 6, 4, 4, 5, 5, 3, 3, 3, 3, 0, 4),
