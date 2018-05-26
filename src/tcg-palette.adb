@@ -128,7 +128,8 @@ package body TCG.Palette is
    procedure Set_Transparent (C : ARGB_Color) is
    begin
       if Transparent_Has_Definition and then Transparent_Color /= C then
-         raise Program_Error;
+         raise Program_Error with
+           "Incompatible new definition of transparent color";
       end if;
 
       Transparent_Color_Id := Add_Color (C);

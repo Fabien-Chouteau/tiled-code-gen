@@ -104,6 +104,9 @@ package body TCG.Tilesets is
       Source : constant String :=
         GNAT.OS_Lib.Normalize_Pathname (Item_As_String (N, "source"),
                                         Base_Dir);
+      Trans   : constant String := Item_As_String (N, "trans");
+      Trans_C : constant ARGB_Color := Palette.To_ARGB (Trans);
+
       Current_X, Current_Y : Natural := 0;
 
       Width, Height : Natural := 0;
@@ -136,7 +139,9 @@ package body TCG.Tilesets is
          Mast_Id : Master_Tile_Id;
       begin
 
-         if A = 0 then
+         if A = 0 or else
+           (R = Trans_C.R and then G = Trans_C.G and then B = Trans_C.B)
+         then
             Id := Transparent;
          else
             Id := Palette.Add_Color ((A, R, G, B));
@@ -174,15 +179,15 @@ package body TCG.Tilesets is
                                      Feedback,
                                      GID.fast);
 
-      Trans  : constant String := Item_As_String (N, "trans");
-
       F   : Ada.Streams.Stream_IO.File_Type;
       Des : GID.Image_descriptor;
 
       Unused : Ada.Calendar.Day_Duration;
    begin
 
-      Palette.Set_Transparent (Palette.To_ARGB (Trans));
+      if not Palette.Transparent_Defined then
+         Palette.Set_Transparent (Trans_C);
+      end if;
 
       --  Allocate the new tiles
       This.First_Master_Tile := Master_Tileset.Last_Index + 1;
