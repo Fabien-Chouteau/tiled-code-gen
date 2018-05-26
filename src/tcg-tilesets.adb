@@ -36,6 +36,8 @@ with Ada.Text_IO;     use Ada.Text_IO;
 with Ada.Directories; use Ada.Directories;
 with Ada.Calendar;
 
+with GNAT.OS_Lib;
+
 with TCG.Palette;           use TCG.Palette;
 with TCG.Utils;             use TCG.Utils;
 with TCG.Collision_Objects; use TCG.Collision_Objects;
@@ -99,6 +101,9 @@ package body TCG.Tilesets is
                         N        : Node)
    is
 
+      Source : constant String :=
+        GNAT.OS_Lib.Normalize_Pathname (Item_As_String (N, "source"),
+                                        Base_Dir);
       Current_X, Current_Y : Natural := 0;
 
       Width, Height : Natural := 0;
@@ -169,8 +174,6 @@ package body TCG.Tilesets is
                                      Feedback,
                                      GID.fast);
 
-      Source : constant String :=
-        Compose (Base_Dir, Item_As_String (N, "source"));
       Trans  : constant String := Item_As_String (N, "trans");
 
       F   : Ada.Streams.Stream_IO.File_Type;

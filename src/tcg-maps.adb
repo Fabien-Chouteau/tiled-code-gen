@@ -35,6 +35,8 @@
 with Ada.Text_IO;     use Ada.Text_IO;
 with Ada.Directories; use Ada.Directories;
 
+with GNAT.OS_Lib;
+
 with DOM.Core; use DOM.Core;
 
 with TCG.Utils;       use TCG.Utils;
@@ -80,7 +82,8 @@ package body TCG.Maps is
                           return Map_Tileset
    is
       Source     : constant String :=
-        Compose (Base_Dir, Item_As_String (N, "source"));
+        GNAT.OS_Lib.Normalize_Pathname (Item_As_String (N, "source"),
+                                        Base_Dir);
       First_Tile : constant Natural := Item_As_Natural (N, "firstgid");
    begin
       return (Tilesets.Load (Source), Tilesets.Map_Tile_Id (First_Tile));
@@ -292,6 +295,7 @@ package body TCG.Maps is
       Create (Output, Out_File, Filepath);
 
       PL ("with GESTE;");
+      PL ("with GESTE.Grid;");
       PL ("pragma Style_Checks (Off);");
       PL ("package " & Package_Name & " is");
 
