@@ -45,10 +45,10 @@ with DOM.Core.Elements;  use DOM.Core.Elements;
 with TCG.Utils;    use TCG.Utils;
 with TCG.Tilesets; use TCG.Tilesets;
 
-package body TCG.Layers is
+package body TCG.Tile_Layers is
 
-   function Create (N : Node) return Layer;
-   procedure Load_Data (L : Layer; N : Node)
+   function Create (N : Node) return Tile_Layer;
+   procedure Load_Data (L : Tile_Layer; N : Node)
      with Pre => L /= No_Layer;
 
    Whitespace : constant Ada.Strings.Maps.Character_Set :=
@@ -58,14 +58,14 @@ package body TCG.Layers is
    -- Create --
    ------------
 
-   function Create (N : Node) return Layer is
+   function Create (N : Node) return Tile_Layer is
       Id     : constant Natural := Item_As_Natural (N, "id");
       Width  : constant Natural := Item_As_Natural (N, "width");
       Height : constant Natural := Item_As_Natural (N, "height");
       Name   : constant String := Item_As_String (N, "name");
-      L      : constant Layer := new Layer_Data (Width, Height);
+      L      : constant Tile_Layer := new Layer_Data (Width, Height);
    begin
-      L.Id := Layer_Id (Id);
+      L.Id := Tile_Layer_Id (Id);
       L.Name := new String'(Name);
       return L;
    end Create;
@@ -74,7 +74,7 @@ package body TCG.Layers is
    -- Load_Data --
    ---------------
 
-   procedure Load_Data (L : Layer; N : Node) is
+   procedure Load_Data (L : Tile_Layer; N : Node) is
       Data : constant String := Node_Value (First_Child (N));
       Cursor : Integer := Data'First;
 
@@ -116,8 +116,8 @@ package body TCG.Layers is
    -- Load --
    ----------
 
-   function Load (Root : Node) return Layer is
-      L : constant Layer := Create (Root);
+   function Load (Root : Node) return Tile_Layer is
+      L : constant Tile_Layer := Create (Root);
 
       List : Node_List;
    begin
@@ -136,28 +136,28 @@ package body TCG.Layers is
    -- Name --
    ----------
 
-   function Name (This : Layer) return String
+   function Name (This : Tile_Layer) return String
    is (if This.Name /= null then This.Name.all else "");
 
    --------
    -- Id --
    --------
 
-   function Id (This : Layer) return Layer_Id
+   function Id (This : Tile_Layer) return Tile_Layer_Id
    is (This.Id);
 
    -----------
    -- Width --
    -----------
 
-   function Width (This : Layer) return Natural
+   function Width (This : Tile_Layer) return Natural
    is (This.Width);
 
    ------------
    -- Height --
    ------------
 
-   function Height (This : Layer) return Natural
+   function Height (This : Tile_Layer) return Natural
    is (This.Height);
 
    ----------
@@ -165,7 +165,7 @@ package body TCG.Layers is
    ----------
 
    function Tile
-     (This : Layer;
+     (This : Tile_Layer;
       X, Y : Natural)
       return TCG.Tilesets.Map_Tile_Id
    is (This.Map (X, Y));
@@ -174,7 +174,7 @@ package body TCG.Layers is
    -- Put --
    ---------
 
-   procedure Put (This : Layer) is
+   procedure Put (This : Tile_Layer) is
    begin
       Put_Line ("Layer: " & Name (This) & " Id:" & This.Id'Img);
       for Y in This.Map'Range (2) loop
@@ -186,4 +186,4 @@ package body TCG.Layers is
       end loop;
    end Put;
 
-end TCG.Layers;
+end TCG.Tile_Layers;

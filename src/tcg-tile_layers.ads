@@ -35,35 +35,35 @@
 with TCG.Tilesets;
 with DOM.Core;
 
-package TCG.Layers is
+package TCG.Tile_Layers is
 
-   type Layer_Id is new Integer;
+   type Tile_Layer_Id is new Integer;
 
-   type Layer is private;
-   No_Layer : constant Layer;
+   type Tile_Layer is private;
+   No_Layer : constant Tile_Layer;
 
-   function Load (Root : DOM.Core.Node) return Layer;
+   function Load (Root : DOM.Core.Node) return Tile_Layer;
 
-   function Name (This : Layer) return String
+   function Name (This : Tile_Layer) return String
      with Pre => This /= No_Layer;
 
-   function Id (This : Layer) return Layer_Id
+   function Id (This : Tile_Layer) return Tile_Layer_Id
      with Pre => This /= No_Layer;
 
-   function Width (This : Layer) return Natural
+   function Width (This : Tile_Layer) return Natural
      with Pre => This /= No_Layer;
 
-   function Height (This : Layer) return Natural
+   function Height (This : Tile_Layer) return Natural
      with Pre => This /= No_Layer;
 
-   function Tile (This : Layer;
+   function Tile (This : Tile_Layer;
                   X, Y : Natural)
                   return TCG.Tilesets.Map_Tile_Id
      with Pre => This /= No_Layer
      and then X in 0 .. Width (This) - 1
      and then Y in 0 .. Height (This) - 1;
 
-   procedure Put (This : Layer)
+   procedure Put (This : Tile_Layer)
      with Pre => This /= No_Layer;
 private
 
@@ -74,11 +74,11 @@ private
 
    type Layer_Data (Width, Height : Natural) is record
       Name : String_Access := null;
-      Id   : Layer_Id;
+      Id   : Tile_Layer_Id;
       Map  : Layer_Tile_Map (1 .. Width, 1 .. Height);
    end record;
 
-   type Layer is access all Layer_Data;
-   No_Layer : constant Layer := null;
+   type Tile_Layer is access all Layer_Data;
+   No_Layer : constant Tile_Layer := null;
 
-end TCG.Layers;
+end TCG.Tile_Layers;

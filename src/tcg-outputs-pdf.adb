@@ -39,7 +39,7 @@ with PDF_Out; use PDF_Out;
 
 with TCG.Palette;
 with TCG.Tilesets;
-with TCG.Layers;
+with TCG.Tile_Layers;
 with TCG.Utils;
 
 package body TCG.Outputs.PDF is
@@ -365,7 +365,7 @@ package body TCG.Outputs.PDF is
             for L in reverse Maps.First_Index (M) .. Maps.Last_Index (M)
             loop
                T_Id := Maps.Master_Tile (M,
-                                         Layers.Tile (Maps.Layer (M, L),
+                                         Tile_Layers.Tile (Maps.Layer (M, L),
                                            1 + X / Tile_Width,
                                            1 + Y / Tile_Height));
 
@@ -397,7 +397,7 @@ package body TCG.Outputs.PDF is
       Font_Size (Outfile, 12.0);
 
       for L in reverse Maps.First_Index (M) .. Maps.Last_Index (M) loop
-         Put_Line (Outfile, " - " & Layers.Name (Maps.Layer (M, L)));
+         Put_Line (Outfile, " - " & Tile_Layers.Name (Maps.Layer (M, L)));
       end loop;
    end Put_Map;
 

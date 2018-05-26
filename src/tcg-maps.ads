@@ -32,7 +32,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with TCG.Layers;
+with TCG.Tile_Layers;
 with TCG.Tilesets;
 
 private with Ada.Containers.Vectors;
@@ -72,7 +72,7 @@ package TCG.Maps is
    function Last_Index (This : Map) return Natural
      with Pre => This /= No_Map;
 
-   function Layer (This : Map; Index : Natural) return Layers.Layer
+   function Layer (This : Map; Index : Natural) return Tile_Layers.Tile_Layer
      with Pre => This /= No_Map;
 
    function Master_Tile (M  : Map;
@@ -97,7 +97,7 @@ private
      (Natural, Map_Tileset);
 
    package Layer_Vect is new Ada.Containers.Vectors
-     (Natural, TCG.Layers.Layer, TCG.Layers."=");
+     (Natural, TCG.Tile_Layers.Tile_Layer, TCG.Tile_Layers."=");
 
    type Map_Data is record
       Tileset_List : Tileset_Vect.Vector;

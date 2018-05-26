@@ -38,7 +38,7 @@ with Ada.Text_IO.Text_Streams;  use Ada.Text_IO.Text_Streams;
 with Interfaces; use Interfaces;
 
 with TCG.Palette;  use TCG.Palette;
-with TCG.Layers;  use TCG.Layers;
+with TCG.Tile_Layers;  use TCG.Tile_Layers;
 with TCG.Tilesets; use TCG.Tilesets;
 
 package body TCG.Maps.Render is

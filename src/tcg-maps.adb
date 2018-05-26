@@ -37,7 +37,8 @@ with Ada.Directories; use Ada.Directories;
 
 with DOM.Core; use DOM.Core;
 
-with TCG.Utils; use TCG.Utils;
+with TCG.Utils;       use TCG.Utils;
+with TCG.Tile_Layers; use TCG.Tile_Layers;
 
 with Input_Sources.File; use Input_Sources.File;
 with Sax.Readers;        use Sax.Readers;
@@ -124,7 +125,7 @@ package body TCG.Maps is
       List := Get_Elements_By_Tag_Name (Doc, "layer");
       for Index in 1 .. Length (List) loop
          N := Item (List, Index - 1);
-         M.Layer_List.Append (Layers.Load (N));
+         M.Layer_List.Append (Tile_Layers.Load (N));
       end loop;
       Free (List);
 
@@ -188,7 +189,7 @@ package body TCG.Maps is
          Put_Line ("Tileset " & Tilesets.Name (TS.Id));
       end loop;
       for L of This.Layer_List loop
-         Layers.Put (L);
+         Tile_Layers.Put (L);
       end loop;
    end Put;
 
@@ -217,7 +218,7 @@ package body TCG.Maps is
    -- Layer --
    -----------
 
-   function Layer (This : Map; Index : Natural) return Layers.Layer
+   function Layer (This : Map; Index : Natural) return Tile_Layers.Tile_Layer
    is (This.Layer_List.Element (Index));
 
    -----------------
@@ -304,31 +305,30 @@ package body TCG.Maps is
 
       for L of M.Layer_List loop
          declare
-            Layer_Ada_Id : constant String :=
-              To_Ada_Identifier (Layers.Name (L));
+            Layer_Ada_Id : constant String := To_Ada_Identifier (Name (L));
          begin
-            PL ("   --  " & Layers.Name (L));
+            PL ("   --  " & Name (L));
             PL ("   package " & Layer_Ada_Id & " is");
-            PL ("      Width  : constant := " & Layers.Width (L)'Img & ";");
-            PL ("      Height : constant := " & Layers.Width (L)'Img & ";");
-            PL ("      Data   : aliased GESTE.Grid_Data :=");
+            PL ("      Width  : constant := " & Width (L)'Img & ";");
+            PL ("      Height : constant := " & Width (L)'Img & ";");
+            PL ("      Data   : aliased GESTE.Grid.Grid_Data :=");
             P  ("        (");
 
-            for X in 1 .. Layers.Width (L) loop
+            for X in 1 .. Width (L) loop
 
                if X /= 1 then
                   P ("         ");
                end if;
                P ("(");
 
-               for Y in 1 .. Layers.Height (L) loop
-                  P (Layers.Tile (L, X, Y)'Img);
-                  if Y /= Layers.Height (L) then
+               for Y in 1 .. Height (L) loop
+                  P (Tile (L, X, Y)'Img);
+                  if Y /= Height (L) then
                      P (",");
                   end if;
                end loop;
                P (")");
-               if X /= Layers.Width (L) then
+               if X /= Width (L) then
                   PL (",");
                else
                   P (")");
