@@ -42,6 +42,8 @@ package TCG.Utils is
 
    function Item_As_String (N : Node; Item : DOM_String) return String;
 
+   function Item_As_Float (N : Node; Item : DOM_String) return Float;
+
    function To_Ada_Identifier (Str : String) return String;
 
    function To_Ada_Filename (Str     : String;

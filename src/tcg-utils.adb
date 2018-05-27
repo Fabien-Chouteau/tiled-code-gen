@@ -83,6 +83,13 @@ package body TCG.Utils is
    function Item_As_String (N : Node; Item : DOM_String) return String
    is (Value (Get_Named_Item (Attributes (N), Item)));
 
+   -------------------
+   -- Item_As_Float --
+   -------------------
+
+   function Item_As_Float (N : Node; Item : DOM_String) return Float
+   is (Float'Value (Value (Get_Named_Item (Attributes (N), Item))));
+
    -----------------------
    -- To_Ada_Identifier --
    -----------------------

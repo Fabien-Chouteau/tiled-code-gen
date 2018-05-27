@@ -39,8 +39,9 @@ with GNAT.OS_Lib;
 
 with DOM.Core; use DOM.Core;
 
-with TCG.Utils;       use TCG.Utils;
-with TCG.Tile_Layers; use TCG.Tile_Layers;
+with TCG.Utils;         use TCG.Utils;
+with TCG.Tile_Layers;   use TCG.Tile_Layers;
+with TCG.Object_Groups; use TCG.Object_Groups;
 
 with Input_Sources.File; use Input_Sources.File;
 with Sax.Readers;        use Sax.Readers;
@@ -132,6 +133,13 @@ package body TCG.Maps is
       end loop;
       Free (List);
 
+      List := Get_Elements_By_Tag_Name (Doc, "objectgroup");
+      for Index in 1 .. Length (List) loop
+         N := Item (List, Index - 1);
+         M.Obj_Group_List.Append (Object_Groups.Load (N));
+      end loop;
+      Free (List);
+
       List := Get_Elements_By_Tag_Name (Doc, "tileset");
       for Index in 1 .. Length (List) loop
          N := Item (List, Index - 1);
@@ -207,14 +215,14 @@ package body TCG.Maps is
    -- First_Index --
    -----------------
 
-   function First_Index (This : Map) return Natural
+   function First_Layer (This : Map) return Natural
    is (Natural (Layer_Vect.First_Index (This.Layer_List)));
 
    ----------------
    -- Last_Index --
    ----------------
 
-   function Last_Index (This : Map) return Natural
+   function Last_Layer (This : Map) return Natural
    is (Natural (Layer_Vect.Last_Index (This.Layer_List)));
 
    -----------
@@ -251,6 +259,28 @@ package body TCG.Maps is
       return Convert (Last_TS_Id, Local_Tile_Id (Id - Last_First_Id));
    end Master_Tile;
 
+   ------------------------
+   -- First_Object_Group --
+   ------------------------
+
+   function First_Object_Group (This : Map) return Natural
+   is (This.Obj_Group_List.First_Index);
+
+   -----------------------
+   -- Last_Object_Group --
+   -----------------------
+
+   function Last_Object_Group (This : Map) return Natural
+   is (This.Obj_Group_List.Last_Index);
+
+   ------------------
+   -- Object_Group --
+   ------------------
+
+   function Object_Group (This : Map; Index : Natural)
+                          return Object_Groups.Object_Group
+   is (This.Obj_Group_List.Element (Index));
+
    -------------------------
    -- Generate_Ada_Source --
    -------------------------
@@ -260,6 +290,7 @@ package body TCG.Maps is
                                   Filepath     : String)
    is
       Output : File_Type;
+      Indent : Natural := 0;
 
       procedure P (Str : String);
       procedure PL (Str : String);
@@ -280,6 +311,9 @@ package body TCG.Maps is
 
       procedure PL (Str : String) is
       begin
+         for X in 1 .. Indent loop
+            Put (Output, " ");
+         end loop;
          Put_Line (Output, Str);
       end PL;
 
@@ -300,23 +334,25 @@ package body TCG.Maps is
       PL ("package " & Package_Name & " is");
 
       NL;
-      PL ("   --  " & M.Name.all);
-      PL ("   Width       : constant :=" & M.Width'Img & ";");
-      PL ("   Height      : constant :=" & M.Height'Img & ";");
-      PL ("   Tile_Width  : constant :=" & M.Tile_Width'Img & ";");
-      PL ("   Tile_Height : constant :=" & M.Tile_Height'Img & ";");
+      Indent := Indent + 3;
+      PL ("--  " & M.Name.all);
+      PL ("Width       : constant :=" & M.Width'Img & ";");
+      PL ("Height      : constant :=" & M.Height'Img & ";");
+      PL ("Tile_Width  : constant :=" & M.Tile_Width'Img & ";");
+      PL ("Tile_Height : constant :=" & M.Tile_Height'Img & ";");
       NL;
 
       for L of M.Layer_List loop
          declare
             Layer_Ada_Id : constant String := To_Ada_Identifier (Name (L));
          begin
-            PL ("   --  " & Name (L));
-            PL ("   package " & Layer_Ada_Id & " is");
-            PL ("      Width  : constant := " & Width (L)'Img & ";");
-            PL ("      Height : constant := " & Width (L)'Img & ";");
-            PL ("      Data   : aliased GESTE.Grid.Grid_Data :=");
-            P  ("        (");
+            PL ("--  " & Name (L));
+            PL ("package " & Layer_Ada_Id & " is");
+            Indent := Indent + 3;
+            PL ("Width  : constant := " & Width (L)'Img & ";");
+            PL ("Height : constant := " & Width (L)'Img & ";");
+            PL ("Data   : aliased GESTE.Grid.Grid_Data :=");
+            P  ("  (");
 
             for X in 1 .. Width (L) loop
 
@@ -333,17 +369,77 @@ package body TCG.Maps is
                end loop;
                P (")");
                if X /= Width (L) then
-                  PL (",");
+                  P (",");
+                  NL;
                else
                   P (")");
                end if;
             end loop;
             PL (";");
-            PL ("   end " & Layer_Ada_Id & ";");
+
+            Indent := Indent - 3;
+
+            PL ("end " & Layer_Ada_Id & ";");
             NL;
          end;
-
       end loop;
+
+      for G of M.Obj_Group_List loop
+         declare
+            Group_Ada_Id : constant String := To_Ada_Identifier (Name (G));
+         begin
+            PL ("package " & Group_Ada_Id & " is");
+
+            Indent := Indent + 3;
+
+            PL ("Objects : Object_Array :=");
+            Indent := Indent + 2;
+            PL ("(");
+            Indent := Indent + 2;
+            for Index in First_Index (G) .. Last_Index (G) loop
+               declare
+                  Obj : constant Object_Groups.Object := Get_Object (G, Index);
+               begin
+                  PL (Index'Img & " => (");
+
+                  Indent := Indent + 2;
+                  PL ("Kind => " & Obj.Kind'Img & ",");
+                  PL ("Id   => " & Obj.Id'Img & ",");
+
+                  if Obj.Name /= null then
+                     PL ("Name => new String'(""" & Obj.Name.all & """),");
+                  else
+                     PL ("Name => null,");
+                  end if;
+
+                  PL ("X    => " & Obj.Pt.X'Img & ",");
+                  PL ("Y    => " & Obj.Pt.Y'Img & ",");
+
+                  PL ("Width => " & Obj.Width'Img & ",");
+                  PL ("Height => " & Obj.Height'Img & ",");
+                  PL ("Tile_Id => " & Obj.Tile_Id'Img & ",");
+
+                  if Obj.Str /= null then
+                     PL ("Str => new String'(""" & Obj.Str.all & """)");
+                  else
+                     PL ("Str => null");
+                  end if;
+
+                  Indent := Indent - 2;
+                  if Index = Last_Index (G) then
+                     PL (")");
+                  else
+                     PL ("),");
+                  end if;
+               end;
+            end loop;
+            Indent := Indent - 2;
+            PL (");");
+            Indent := Indent - 5;
+            PL ("end " & Group_Ada_Id & ";");
+         end;
+      end loop;
+      Indent := Indent - 3;
 
       PL ("end " & Package_Name & ";");
 

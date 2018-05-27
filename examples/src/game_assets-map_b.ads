@@ -1,4 +1,5 @@
 with GESTE;
+with GESTE.Grid;
 pragma Style_Checks (Off);
 package Game_Assets.map_b is
 
@@ -12,8 +13,8 @@ package Game_Assets.map_b is
    package Tile_Layer_1 is
       Width  : constant :=  20;
       Height : constant :=  20;
-      Data   : aliased GESTE.Grid_Data :=
-        (( 0, 0, 0, 0, 0, 0, 0, 18, 1, 7),
+      Data   : aliased GESTE.Grid.Grid_Data :=
+  (( 0, 0, 0, 0, 0, 0, 0, 18, 1, 7),
          ( 0, 0, 0, 0, 0, 0, 0, 0, 2, 8),
          ( 0, 0, 0, 0, 0, 0, 2, 8, 2, 8),
          ( 0, 0, 0, 0, 11, 0, 0, 0, 2, 8),
@@ -32,15 +33,15 @@ package Game_Assets.map_b is
          ( 0, 0, 0, 0, 2, 8, 77, 77, 77, 8),
          ( 0, 0, 0, 0, 2, 8, 8, 77, 77, 8),
          ( 0, 0, 0, 0, 2, 8, 8, 8, 77, 8),
-         ( 0, 0, 0, 0, 2, 8, 8, 8, 8, 8));
+         ( 0, 0, 0, 0, 2, 8, 8, 8, 8, 8))      ;
    end Tile_Layer_1;
 
    --  Tile Layer 2
    package Tile_Layer_2 is
       Width  : constant :=  20;
       Height : constant :=  20;
-      Data   : aliased GESTE.Grid_Data :=
-        (( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+      Data   : aliased GESTE.Grid.Grid_Data :=
+  (( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
          ( 0, 0, 0, 0, 0, 0, 11, 0, 0, 0),
          ( 0, 40, 0, 0, 0, 72, 78, 78, 0, 0),
          ( 0, 41, 0, 0, 0, 0, 2, 8, 0, 0),
@@ -59,7 +60,67 @@ package Game_Assets.map_b is
          ( 0, 0, 0, 0, 0, 0, 5, 0, 0, 0),
          ( 0, 0, 0, 0, 0, 0, 0, 5, 24, 0),
          ( 0, 0, 0, 0, 0, 0, 0, 0, 7, 0),
-         ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+         ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))      ;
    end Tile_Layer_2;
 
+   package Object_Layer_1 is
+      Objects : Object_Array :=
+        (
+           0 => (
+            Kind => RECTANGLE_OBJ,
+            Id   =>  1,
+            Name => null,
+            X    =>  1.29333E+02,
+            Y    =>  7.00000E+00,
+            Width =>  4.23333E+01,
+            Height =>  1.96667E+01,
+            Tile_Id =>  0,
+            Str => null
+          ),
+           1 => (
+            Kind => POINT_OBJ,
+            Id   =>  2,
+            Name => null,
+            X    =>  1.01667E+02,
+            Y    =>  1.53333E+01,
+            Width =>  0.00000E+00,
+            Height =>  0.00000E+00,
+            Tile_Id =>  0,
+            Str => null
+          ),
+           2 => (
+            Kind => POLYGON_OBJ,
+            Id   =>  3,
+            Name => null,
+            X    =>  2.71667E+02,
+            Y    =>  8.66667E+00,
+            Width =>  0.00000E+00,
+            Height =>  0.00000E+00,
+            Tile_Id =>  0,
+            Str => null
+          ),
+           3 => (
+            Kind => TILE_OBJ,
+            Id   =>  4,
+            Name => null,
+            X    =>  1.85000E+02,
+            Y    =>  2.33333E+01,
+            Width =>  1.60000E+01,
+            Height =>  1.60000E+01,
+            Tile_Id =>  80,
+            Str => null
+          ),
+           4 => (
+            Kind => TEXT_OBJ,
+            Id   =>  6,
+            Name => null,
+            X    =>  8.28125E+01,
+            Y    =>  3.18333E+01,
+            Width =>  9.23750E+01,
+            Height =>  1.90000E+01,
+            Tile_Id =>  0,
+            Str => new String'("Hello World")
+          )
+        );
+   end Object_Layer_1;
 end Game_Assets.map_b;

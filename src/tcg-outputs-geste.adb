@@ -133,6 +133,10 @@ package body TCG.Outputs.GESTE is
       Close (Output);
    end Generate_Tileset;
 
+   ---------------------------------
+   -- Generate_Tileset_Collisions --
+   ---------------------------------
+
    procedure Generate_Tileset_Collisions (Filepath     : String;
                                           Package_Name : String)
    is
@@ -272,6 +276,8 @@ package body TCG.Outputs.GESTE is
       Create (Output, Out_File, Filename);
 
       Put_Line (Output, "with GESTE;");
+      Put_Line (Output, "with GESTE.Maths_Types;");
+      Put_Line (Output, "with GESTE_Config;");
       New_Line (Output);
       Put_Line (Output, "pragma Style_Checks (Off);");
       Put_Line (Output, "package " & Package_Name & " is");
@@ -289,6 +295,29 @@ package body TCG.Outputs.GESTE is
       end loop;
       Put_Line (Output, ");");
 
+      New_Line (Output);
+      Put_Line (Output, "   type Object_Kind is (Rectangle_Obj, Point_Obj,");
+      Put_Line (Output, "     Ellipse_Obj, Polygon_Obj, Tile_Obj, Text_Obj);");
+      New_Line (Output);
+      Put_Line (Output, "   type String_Access is access all String;");
+      New_Line (Output);
+      Put_Line (Output, "   type Object");
+      Put_Line (Output, "     (Kind : Object_Kind := Rectangle_Obj)");
+      Put_Line (Output, "   is record");
+      Put_Line (Output, "      Name    : String_Access;");
+      Put_Line (Output, "      Id      : Natural;");
+      Put_Line (Output, "      X       : GESTE.Maths_Types.Dimensionless;");
+      Put_Line (Output, "      Y       : GESTE.Maths_Types.Dimensionless;");
+      Put_Line (Output, "      Width   : GESTE.Maths_Types.Dimensionless;");
+      Put_Line (Output, "      Height  : GESTE.Maths_Types.Dimensionless;");
+      --  Put_Linr (Output, "      Points  : Polygon_Access;");
+      Put_Line (Output, "      Str     : String_Access;");
+      Put_Line (Output, "      Tile_Id : GESTE_Config.Tile_Index;");
+      Put_Line (Output, "   end record;");
+      New_Line (Output);
+      Put_Line (Output, "   type Object_Array is array (Natural range <>)");
+      Put_Line (Output, "      of Object;");
+      New_Line (Output);
       Put_Line (Output, "end " & Package_Name & ";");
       Close (Output);
    end Generate_Root_Package;

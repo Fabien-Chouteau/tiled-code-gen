@@ -75,7 +75,7 @@ private
    end record;
 
    package Shape_List_Pck is new Ada.Containers.Doubly_Linked_Lists
-        (Collision_Shape);
+     (Collision_Shape);
 
    type Collisions is limited record
       List : Shape_List_Pck.List;

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" tiledversion="1.1.5" orientation="orthogonal" renderorder="right-down" width="20" height="10" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="1">
+<map version="1.0" tiledversion="1.1.5" orientation="orthogonal" renderorder="right-down" width="20" height="10" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="7">
  <tileset firstgid="1" source="tiles.tsx"/>
  <tileset firstgid="79" source="pix.tsx"/>
  <layer id="1" name="Tile Layer 1" width="20" height="10">
@@ -16,6 +16,19 @@
 7,8,8,8,8,8,8,8,8,8,77,77,77,77,77,77,8,8,8,8
 </data>
  </layer>
+ <objectgroup id="3" name="Object Layer 1">
+  <object id="1" x="129.333" y="7" width="42.3333" height="19.6667"/>
+  <object id="2" x="101.667" y="15.3333">
+   <point/>
+  </object>
+  <object id="3" x="271.667" y="8.66667">
+   <polygon points="0,0 44.3333,27.6667 6.66667,48 -46.6667,46.6667 -41.6667,24.3333 0,34.3333 -28.6667,15.3333"/>
+  </object>
+  <object id="4" gid="80" x="185" y="23.3333" width="16" height="16" rotation="38"/>
+  <object id="6" x="82.8125" y="31.8333" width="92.375" height="19">
+   <text wrap="1">Hello World</text>
+  </object>
+ </objectgroup>
  <layer id="2" name="Tile Layer 2" width="20" height="10">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,47,48,0,0,0,0,

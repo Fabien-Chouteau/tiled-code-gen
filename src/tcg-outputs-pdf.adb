@@ -362,7 +362,7 @@ package body TCG.Outputs.PDF is
       for Y in reverse 0 .. Height - 1 loop
          for X in 0 .. Width - 1 loop
             C := Palette.Transparent;
-            for L in reverse Maps.First_Index (M) .. Maps.Last_Index (M)
+            for L in reverse Maps.First_Layer (M) .. Maps.Last_Layer (M)
             loop
                T_Id := Maps.Master_Tile (M,
                                          Tile_Layers.Tile (Maps.Layer (M, L),
@@ -396,7 +396,7 @@ package body TCG.Outputs.PDF is
       New_Line (Outfile);
       Font_Size (Outfile, 12.0);
 
-      for L in reverse Maps.First_Index (M) .. Maps.Last_Index (M) loop
+      for L in reverse Maps.First_Layer (M) .. Maps.Last_Layer (M) loop
          Put_Line (Outfile, " - " & Tile_Layers.Name (Maps.Layer (M, L)));
       end loop;
    end Put_Map;

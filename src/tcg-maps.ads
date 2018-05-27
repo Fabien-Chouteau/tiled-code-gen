@@ -33,6 +33,7 @@
 ------------------------------------------------------------------------------
 
 with TCG.Tile_Layers;
+with TCG.Object_Groups;
 with TCG.Tilesets;
 
 private with Ada.Containers.Vectors;
@@ -66,10 +67,10 @@ package TCG.Maps is
    function Number_Of_Layers (This : Map) return Natural
      with Pre => This /= No_Map;
 
-   function First_Index (This : Map) return Natural
+   function First_Layer (This : Map) return Natural
      with Pre => This /= No_Map;
 
-   function Last_Index (This : Map) return Natural
+   function Last_Layer (This : Map) return Natural
      with Pre => This /= No_Map;
 
    function Layer (This : Map; Index : Natural) return Tile_Layers.Tile_Layer
@@ -79,6 +80,16 @@ package TCG.Maps is
                          Id : Tilesets.Map_Tile_Id)
                          return Tilesets.Master_Tile_Id;
    --  Return the Master_Tile_Id of the local map tile
+
+   function First_Object_Group (This : Map) return Natural
+     with Pre => This /= No_Map;
+
+   function Last_Object_Group (This : Map) return Natural
+     with Pre => This /= No_Map;
+
+   function Object_Group (This : Map; Index : Natural)
+                          return Object_Groups.Object_Group
+     with Pre => This /= No_Map;
 
    procedure Generate_Ada_Source (M            : Map;
                                   Package_Name : String;
@@ -99,14 +110,18 @@ private
    package Layer_Vect is new Ada.Containers.Vectors
      (Natural, TCG.Tile_Layers.Tile_Layer, TCG.Tile_Layers."=");
 
+   package Object_Group_Vect is new Ada.Containers.Vectors
+     (Natural, TCG.Object_Groups.Object_Group, TCG.Object_Groups."=");
+
    type Map_Data is record
-      Tileset_List : Tileset_Vect.Vector;
-      Layer_List   : Layer_Vect.Vector;
-      Name         : String_Access;
-      Width        : Natural;
-      Height       : Natural;
-      Tile_Width   : Natural;
-      Tile_Height  : Natural;
+      Tileset_List   : Tileset_Vect.Vector;
+      Layer_List     : Layer_Vect.Vector;
+      Obj_Group_List : Object_Group_Vect.Vector;
+      Name           : String_Access;
+      Width          : Natural;
+      Height         : Natural;
+      Tile_Width     : Natural;
+      Tile_Height    : Natural;
    end record;
 
    type Map is access all Map_Data;
