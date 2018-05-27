@@ -207,7 +207,7 @@ package body TCG.Tilesets is
       Height := GID.Pixel_height (Des);
 
       GID_Load (Des, Unused);
-
+      Close (F);
    end Load_Data;
 
    ---------------------
