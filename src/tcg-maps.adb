@@ -242,8 +242,8 @@ package body TCG.Maps is
    is
       use Tilesets;
 
-      Last_First_Id : Map_Tile_Id := 0;
-      Last_TS_Id    : Tileset_Id := Invalid_Tileset;
+      First_Id : Map_Tile_Id := 0;
+      TS_Id    : Tileset_Id := Invalid_Tileset;
    begin
       if Id = 0 then
          return No_Tile;
@@ -252,11 +252,11 @@ package body TCG.Maps is
          if TS.First_Tile > Id then
             exit;
          else
-            Last_TS_Id := TS.Id;
-            Last_First_Id := TS.First_Tile;
+            TS_Id := TS.Id;
+            First_Id := TS.First_Tile;
          end if;
       end loop;
-      return Convert (Last_TS_Id, Local_Tile_Id (Id - Last_First_Id));
+      return Convert (TS_Id, Local_Tile_Id (Id - First_Id));
    end Master_Tile;
 
    ------------------------
@@ -362,7 +362,7 @@ package body TCG.Maps is
                P ("(");
 
                for Y in 1 .. Height (L) loop
-                  P (Tile (L, X, Y)'Img);
+                  P (Master_Tile (M, Tile (L, X, Y))'Img);
                   if Y /= Height (L) then
                      P (",");
                   end if;
