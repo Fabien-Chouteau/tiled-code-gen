@@ -295,6 +295,7 @@ package body TCG.Maps is
       procedure P (Str : String);
       procedure PL (Str : String);
       procedure NL;
+      procedure Put_Object (Obj : Object_Groups.Object);
 
       -------
       -- P --
@@ -325,6 +326,35 @@ package body TCG.Maps is
       begin
          New_Line (Output);
       end NL;
+
+      ----------------
+      -- Put_Object --
+      ----------------
+
+      procedure Put_Object (Obj : Object_Groups.Object) is
+      begin
+            PL ("Kind => " & Obj.Kind'Img & ",");
+            PL ("Id   => " & Obj.Id'Img & ",");
+
+            if Obj.Name /= null then
+               PL ("Name => new String'(""" & Obj.Name.all & """),");
+            else
+               PL ("Name => null,");
+            end if;
+
+            PL ("X    => " & Obj.Pt.X'Img & ",");
+            PL ("Y    => " & Obj.Pt.Y'Img & ",");
+
+            PL ("Width => " & Obj.Width'Img & ",");
+            PL ("Height => " & Obj.Height'Img & ",");
+            PL ("Tile_Id => " & Obj.Tile_Id'Img & ",");
+
+            if Obj.Str /= null then
+               PL ("Str => new String'(""" & Obj.Str.all & """)");
+            else
+               PL ("Str => null");
+            end if;
+      end Put_Object;
    begin
       Create (Output, Out_File, Filepath);
 
@@ -392,6 +422,7 @@ package body TCG.Maps is
 
             Indent := Indent + 3;
 
+            --  Objects as array
             PL ("Objects : Object_Array :=");
             Indent := Indent + 2;
             PL ("(");
@@ -403,28 +434,7 @@ package body TCG.Maps is
                   PL (Index'Img & " => (");
 
                   Indent := Indent + 2;
-                  PL ("Kind => " & Obj.Kind'Img & ",");
-                  PL ("Id   => " & Obj.Id'Img & ",");
-
-                  if Obj.Name /= null then
-                     PL ("Name => new String'(""" & Obj.Name.all & """),");
-                  else
-                     PL ("Name => null,");
-                  end if;
-
-                  PL ("X    => " & Obj.Pt.X'Img & ",");
-                  PL ("Y    => " & Obj.Pt.Y'Img & ",");
-
-                  PL ("Width => " & Obj.Width'Img & ",");
-                  PL ("Height => " & Obj.Height'Img & ",");
-                  PL ("Tile_Id => " & Obj.Tile_Id'Img & ",");
-
-                  if Obj.Str /= null then
-                     PL ("Str => new String'(""" & Obj.Str.all & """)");
-                  else
-                     PL ("Str => null");
-                  end if;
-
+                  Put_Object (Obj);
                   Indent := Indent - 2;
                   if Index = Last_Index (G) then
                      PL (")");
@@ -435,7 +445,24 @@ package body TCG.Maps is
             end loop;
             Indent := Indent - 2;
             PL (");");
-            Indent := Indent - 5;
+            Indent := Indent - 2;
+
+            --  Object as indivial declaration
+            for Index in First_Index (G) .. Last_Index (G) loop
+               declare
+                  Obj : constant Object_Groups.Object := Get_Object (G, Index);
+               begin
+                  if Obj.Name /= null then
+                     PL (TCG.Utils.To_Ada_Identifier (Obj.Name.all) &
+                           " : aliased constant Object := (");
+                     Indent := Indent + 2;
+                     Put_Object (Obj);
+                     PL (");");
+                     Indent := Indent - 2;
+                  end if;
+               end;
+            end loop;
+            Indent := Indent - 3;
             PL ("end " & Group_Ada_Id & ";");
          end;
       end loop;
