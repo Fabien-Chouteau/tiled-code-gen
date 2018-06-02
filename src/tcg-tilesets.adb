@@ -101,11 +101,11 @@ package body TCG.Tilesets is
                         N        : Node)
    is
 
-      Source : constant String :=
+      Source   : constant String :=
         GNAT.OS_Lib.Normalize_Pathname (Item_As_String (N, "source"),
                                         Base_Dir);
-      Trans   : constant String := Item_As_String (N, "trans");
-      Trans_C : constant ARGB_Color := Palette.To_ARGB (Trans);
+      Trans    : constant String := Item_As_String (N, "trans");
+      Trans_C  : constant ARGB_Color := Palette.To_ARGB (Trans);
 
       Current_X, Current_Y : Natural := 0;
 
@@ -149,6 +149,14 @@ package body TCG.Tilesets is
 
          Loc_Id := Local_Tile_Id
            ((X / Tile_Width) + (Y / Tile_Height) * This.Columns);
+
+         --  Check if pixel is outside the tile grid
+         if X / Tile_Width >= This.Columns
+           or else
+            Loc_Id >= Local_Tile_Id (This.Number_Of_Tiles)
+         then
+            return;
+         end if;
 
          Mast_Id := This.First_Master_Tile + Master_Tile_Id (Loc_Id);
 
