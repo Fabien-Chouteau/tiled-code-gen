@@ -144,6 +144,7 @@ begin
             List.Append (TCG.Maps.Load (Arg, Base_Name (Arg)));
          elsif Ends_With (Arg, ".tsx") then
             Tileset := Tilesets.Load (Arg);
+            Tilesets.Fill_Master_Tileset (Tileset);
          else
             Ada.Text_IO.Put_Line
               (Ada.Text_IO.Standard_Error,
@@ -156,6 +157,10 @@ begin
       Display_Help (Config);
       return;
    end if;
+
+   for Map of List loop
+      TCG.Maps.Fill_Master_Tileset (Map);
+   end loop;
 
    if GESTE_Enabled then
       Outputs.GESTE.Gen_GESTE_Source (Directory         => Source_Out_Dir.all,

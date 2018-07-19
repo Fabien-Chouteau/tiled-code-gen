@@ -60,7 +60,7 @@ package TCG.Object_Groups is
       Width, Height : Float;
       Points  : Polygon_Access;
       Str     : String_Access;
-      Tile_Id : TCG.Tilesets.Master_Tile_Id;
+      Tile_Id : TCG.Tilesets.Map_Tile_Id;
    end record;
 
    type Object_Group_Id is new Integer;

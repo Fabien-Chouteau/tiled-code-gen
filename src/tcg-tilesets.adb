@@ -50,6 +50,7 @@ with DOM.Core.Documents; use DOM.Core.Documents;
 with DOM.Core.Nodes;     use DOM.Core.Nodes;
 with Ada.Streams.Stream_IO; use Ada.Streams.Stream_IO;
 with GID;
+with Interfaces;
 
 package body TCG.Tilesets is
 
@@ -61,6 +62,7 @@ package body TCG.Tilesets is
 
    procedure Load_Collisions (This : in out Local_Tileset;
                               Doc  : Document);
+   function In_Master_Tileset (Tile : Tile_Id_Rec) return Boolean;
 
    ------------
    -- Create --
@@ -131,21 +133,10 @@ package body TCG.Tilesets is
       is
          use type Palette.Component;
 
-         Id : Palette.Color_Id;
-         X  : constant Natural := Current_X;
-         Y  : constant Natural := (Height - 1) - Current_Y;
-
+         X       : constant Natural := Current_X;
+         Y       : constant Natural := (Height - 1) - Current_Y;
          Loc_Id  : Local_Tile_Id;
-         Mast_Id : Master_Tile_Id;
       begin
-
-         if A = 0 or else
-           (R = Trans_C.R and then G = Trans_C.G and then B = Trans_C.B)
-         then
-            Id := Transparent;
-         else
-            Id := Palette.Add_Color ((A, R, G, B));
-         end if;
 
          Loc_Id := Local_Tile_Id
            ((X / Tile_Width) + (Y / Tile_Height) * This.Columns);
@@ -158,10 +149,8 @@ package body TCG.Tilesets is
             return;
          end if;
 
-         Mast_Id := This.First_Master_Tile + Master_Tile_Id (Loc_Id);
-
-         Master_Tileset (Mast_Id).Pixels (1 + X mod Tile_Width,
-                                          1 + Y mod Tile_Height) := Id;
+         This.Tiles (Loc_Id).Pixels (1 + X mod Tile_Width,
+                                     1 + Y mod Tile_Height) := (A, R, G, B);
 
          if Current_X < Width - 1 then
             Current_X := Current_X + 1;
@@ -198,9 +187,8 @@ package body TCG.Tilesets is
       end if;
 
       --  Allocate the new tiles
-      This.First_Master_Tile := Master_Tileset.Last_Index + 1;
       for Cnt in 1 .. This.Number_Of_Tiles loop
-         Master_Tileset.Append (new Tile_Data (Tile_Width, Tile_Height));
+         This.Tiles.Append (new Tile_Data (Tile_Width, Tile_Height));
       end loop;
 
       This.Source := new String'(Source);
@@ -234,13 +222,9 @@ package body TCG.Tilesets is
          N := Item (List, Index - 1);
          declare
             Id   : constant Natural := Item_As_Natural (N, "id");
-            M_Id : Master_Tile_Id;
          begin
             if Id < This.Number_Of_Tiles then
-
-               M_Id := This.First_Master_Tile + Master_Tile_Id (Id);
-
-               Load (Master_Tileset.Element (M_Id).Collisions, N);
+               Load (This.Tiles.Element (Local_Tile_Id (Id)).Collisions, N);
             end if;
          end;
       end loop;
@@ -321,6 +305,13 @@ package body TCG.Tilesets is
    function Name (Id : Tileset_Id) return String
    is (Local_Tilesets.Element (Natural (Id)).Name.all);
 
+   -----------------------
+   -- In_Master_Tileset --
+   -----------------------
+
+   function In_Master_Tileset (Tile : Tile_Id_Rec) return Boolean
+   is (Master_Tileset.Contains (Tile));
+
    -------------
    -- Convert --
    -------------
@@ -329,9 +320,25 @@ package body TCG.Tilesets is
                      Loc : Local_Tile_Id)
                      return Master_Tile_Id
    is
-      TS : constant Local_Tileset := Local_Tilesets.Element (Natural (Id));
+      Tile   : constant Tile_Id_Rec := (Id, Loc);
+      Unused : Palette.Color_Id;
    begin
-      return Master_Tile_Id (TS.First_Master_Tile + Master_Tile_Id (Loc));
+      if In_Master_Tileset (Tile) then
+         return Master_Tileset.Element (Tile);
+      end if;
+
+      Master_Tilevect.Append (Local_Tilesets (Natural (Id)).Tiles (Loc));
+      Master_Tileset.Insert (Tile, Master_Tilevect.Last_Index);
+
+      --  For each pixel of the tile...
+      for X in 1 .. Tile_Width loop
+         for Y in 1 .. Tile_Height loop
+            --  Add its color to the palette
+            Unused := Pix (Master_Tilevect.Last_Index, X, Y);
+         end loop;
+      end loop;
+
+      return Master_Tilevect.Last_Index;
    end Convert;
 
    ---------------------
@@ -339,21 +346,21 @@ package body TCG.Tilesets is
    ---------------------
 
    function Number_Of_Tiles return Natural
-   is (Natural (Master_Tileset.Length) - 1);
+   is (Natural (Master_Tilevect.Length) - 1);
 
    --------------
    -- First_Id --
    --------------
 
    function First_Id return Master_Tile_Id
-   is (Master_Tileset.First_Index);
+   is (Master_Tilevect.First_Index);
 
    -------------
    -- Last_Id --
    -------------
 
    function Last_Id return Master_Tile_Id
-   is (Master_Tileset.Last_Index);
+   is (Master_Tilevect.Last_Index);
 
    ----------------
    -- Tile_Width --
@@ -385,7 +392,32 @@ package body TCG.Tilesets is
    function Pix (T    : Master_Tile_Id;
                  X, Y : Positive)
                  return Palette.Color_Id
-   is (Master_Tileset.Element (T).Pixels (X, Y));
+   is
+      use type Interfaces.Unsigned_8;
+
+      Pix     : constant ARGB_Color :=
+        Master_Tilevect.Element (T).Pixels (X, Y);
+
+      Id      : Palette.Color_Id;
+      Trans_C : constant ARGB_Color := Palette.Transparent;
+   begin
+
+      if Pix.A = 0
+        or else
+        (Pix.R = Trans_C.R
+         and then
+         Pix.G = Trans_C.G
+         and then
+         Pix.B = Trans_C.B)
+
+      then
+         Id := Transparent;
+      else
+         Id := Palette.Add_Color (Pix);
+      end if;
+
+      return Id;
+   end Pix;
 
    -------------------
    -- Has_Collision --
@@ -393,7 +425,7 @@ package body TCG.Tilesets is
 
    function Has_Collision (T : Master_Tile_Id)
                            return Boolean
-   is (Has_Collision (Master_Tileset.Element (T).Collisions));
+   is (Has_Collision (Master_Tilevect.Element (T).Collisions));
 
    ---------------
    -- Collision --
@@ -402,39 +434,24 @@ package body TCG.Tilesets is
    function Collision (T    : Master_Tile_Id;
                        X, Y : Positive)
                        return Boolean
-   is (Collide (Master_Tileset.Element (T).Collisions,
+   is (Collide (Master_Tilevect.Element (T).Collisions,
                 Float (X) - 0.5,
                 Float (Y) - 0.5));
 
-   ---------
-   -- Put --
-   ---------
+   -------------------------
+   -- Fill_Master_Tileset --
+   -------------------------
 
-   procedure Put is
-      use Tile_Data_Vect;
+   procedure Fill_Master_Tileset (T : Tileset_Id) is
+      Tileset : Local_Tileset renames Local_Tilesets (Natural (T));
+      Unused : Master_Tile_Id;
    begin
-      Put_Line ("Number_Of_Tiles: " & Number_Of_Tiles'Img);
-      Put_Line ("Tile_Width: " & Tile_Width'Img);
-      Put_Line ("Tile_Height: " & Tile_Height'Img);
+      for Id in Tileset.Tiles.First_Index .. Tileset.Tiles.Last_Index loop
 
-      for This of Local_Tilesets loop
-         Put_Line ("Tileset -> Name: " & This.Name.all);
-         Put_Line ("Source: " &
-                   (if This.Source /= null then This.Source.all else ""));
-         Put_Line ("Number_Of_Tiles: " & This.Number_Of_Tiles'Img);
+         --  Add all tiles in the master tileset
+         Unused := Convert (T, Id);
       end loop;
-
-      for Cur in Master_Tileset.Iterate loop
-         Put_Line ("Tile" & To_Index (Cur)'Img & ":");
-         for Y in 0 .. Tile_Height - 1 loop
-            for X in 1 .. Tile_Width - 1 loop
-               Put (Palette.Image
-                    (Tile_Data_Vect.Element (Cur).Pixels (X, Y)));
-            end loop;
-            New_Line;
-         end loop;
-      end loop;
-   end Put;
+   end Fill_Master_Tileset;
 
    --------------------
    -- Already_Loaded --
@@ -452,8 +469,12 @@ package body TCG.Tilesets is
    end Already_Loaded;
 
 begin
-   Master_Tileset.Append (null);
-   if Master_Tileset.Last_Index /= No_Tile then
+   --  Add the first tile, which should be the "No_Tile"
+   Master_Tilevect.Append (null);
+   if Master_Tilevect.Last_Index /= No_Tile
+     and then
+      Master_Tilevect.First_Index /= No_Tile
+   then
       raise Program_Error;
    end if;
 end TCG.Tilesets;

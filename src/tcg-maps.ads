@@ -95,6 +95,10 @@ package TCG.Maps is
                                   Package_Name : String;
                                   Filepath     : String);
 
+   procedure Fill_Master_Tileset (M : Map);
+   --  Fill the master tileset with all the tiles and only the tiles used in
+   --  the maps of the list.
+
 private
 
    type String_Access is access all String;

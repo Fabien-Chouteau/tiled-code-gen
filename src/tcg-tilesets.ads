@@ -34,6 +34,8 @@
 
 with TCG.Palette;
 
+private with Ada.Containers;
+private with Ada.Containers.Hashed_Maps;
 private with Ada.Containers.Vectors;
 private with TCG.Collision_Objects;
 
@@ -78,7 +80,7 @@ package TCG.Tilesets is
                      Loc : Local_Tile_Id)
                      return Master_Tile_Id
      with Pre => Id /= Invalid_Tileset;
-   --  Return the Master_Tile_Id for a local tile
+   --  Move a tile into the Master tileset and return its id
 
    function Number_Of_Tiles return Natural;
    --  Number of tiles in the master set
@@ -120,7 +122,8 @@ package TCG.Tilesets is
      and then X <= Tile_Width
      and then Y <= Tile_Height;
 
-   procedure Put;
+   procedure Fill_Master_Tileset (T : Tileset_Id);
+   --  Fill the master tileset with all the tiles of this tileset
 
 private
 
@@ -128,7 +131,7 @@ private
 
    type Tile_Pix is array (Positive range <>,
                            Positive range <>) of
-     TCG.Palette.Color_Id;
+     TCG.Palette.ARGB_Color;
 
    type Tile_Data (Width, Height : Positive) is record
       Pixels     : Tile_Pix (1 .. Width, 1 .. Height);
@@ -138,20 +141,16 @@ private
    type Tile_Data_Acc is access all Tile_Data;
 
    package Tile_Data_Vect is new Ada.Containers.Vectors
-     (Index_Type   => Master_Tile_Id,
+     (Index_Type   => Local_Tile_Id,
       Element_Type => Tile_Data_Acc);
-
-   Master_Tileset : Tile_Data_Vect.Vector;
-   M_Tile_Width  : Natural := 0;
-   M_Tile_Height : Natural := 0;
 
    type Local_Tileset is record
       Name              : String_Access := null;
       Source            : String_Access := null;
       Path              : String_Access := null;
+      Tiles             : Tile_Data_Vect.Vector;
       Columns           : Natural := 0;
       Number_Of_Tiles   : Natural := 0;
-      First_Master_Tile : Master_Tile_Id;
    end record;
 
    package Tileset_Vect is new Ada.Containers.Vectors
@@ -164,5 +163,38 @@ private
    Local_Tilesets : Tileset_Vect.Vector;
 
    function Already_Loaded (Path : String) return Tileset_Id;
+
+   type Tile_Id_Rec is record
+      TS : Tileset_Id;
+      Id : Local_Tile_Id;
+   end record;
+
+   use type Ada.Containers.Hash_Type;
+
+   function Hash (Id : Tile_Id_Rec)
+                  return Ada.Containers.Hash_Type
+   is (Ada.Containers.Hash_Type (Id.TS)
+        xor
+       Ada.Containers.Hash_Type (Id.Id));
+
+   function Equivalent_Keys (A, B : Tile_Id_Rec)
+                             return Boolean
+   is (A.TS = B.TS and then A.Id = B.Id);
+
+   package Master_Tile_Map is new Ada.Containers.Hashed_Maps
+     (Key_Type        => Tile_Id_Rec,
+      Element_Type    => Master_Tile_Id,
+      Hash            => Hash,
+      Equivalent_Keys => Equivalent_Keys);
+
+   package Master_Tile_Vect is new Ada.Containers.Vectors
+     (Index_Type   => Master_Tile_Id,
+      Element_Type => Tile_Data_Acc);
+
+   Master_Tileset : Master_Tile_Map.Map;
+   Master_Tilevect : Master_Tile_Vect.Vector;
+   Last_Master_Id : Master_Tile_Id := 0;
+   M_Tile_Width  : Natural := 0;
+   M_Tile_Height : Natural := 0;
 
 end TCG.Tilesets;

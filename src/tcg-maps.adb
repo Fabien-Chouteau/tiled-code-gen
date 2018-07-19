@@ -126,13 +126,6 @@ package body TCG.Maps is
 
       Free (List);
 
-      List := Get_Elements_By_Tag_Name (Doc, "layer");
-      for Index in 1 .. Length (List) loop
-         N := Item (List, Index - 1);
-         M.Layer_List.Append (Tile_Layers.Load (N));
-      end loop;
-      Free (List);
-
       List := Get_Elements_By_Tag_Name (Doc, "objectgroup");
       for Index in 1 .. Length (List) loop
          N := Item (List, Index - 1);
@@ -144,6 +137,13 @@ package body TCG.Maps is
       for Index in 1 .. Length (List) loop
          N := Item (List, Index - 1);
          M.Tileset_List.Append (Load_Tileset (N, Dir));
+      end loop;
+      Free (List);
+
+      List := Get_Elements_By_Tag_Name (Doc, "layer");
+      for Index in 1 .. Length (List) loop
+         N := Item (List, Index - 1);
+         M.Layer_List.Append (Tile_Layers.Load (N));
       end loop;
       Free (List);
 
@@ -295,7 +295,8 @@ package body TCG.Maps is
       procedure P (Str : String);
       procedure PL (Str : String);
       procedure NL;
-      procedure Put_Object (Obj : Object_Groups.Object);
+      procedure Put_Object (M   : Map;
+                            Obj : Object_Groups.Object);
 
       -------
       -- P --
@@ -331,7 +332,9 @@ package body TCG.Maps is
       -- Put_Object --
       ----------------
 
-      procedure Put_Object (Obj : Object_Groups.Object) is
+      procedure Put_Object (M   : Map;
+                            Obj : Object_Groups.Object)
+      is
       begin
             PL ("Kind => " & Obj.Kind'Img & ",");
             PL ("Id   => " & Obj.Id'Img & ",");
@@ -347,7 +350,7 @@ package body TCG.Maps is
 
             PL ("Width => " & Obj.Width'Img & ",");
             PL ("Height => " & Obj.Height'Img & ",");
-            PL ("Tile_Id => " & Obj.Tile_Id'Img & ",");
+            PL ("Tile_Id => " & Master_Tile (M, Obj.Tile_Id)'Img & ",");
 
             if Obj.Str /= null then
                PL ("Str => new String'(""" & Obj.Str.all & """)");
@@ -434,7 +437,7 @@ package body TCG.Maps is
                   PL (Index'Img & " => (");
 
                   Indent := Indent + 2;
-                  Put_Object (Obj);
+                  Put_Object (M, Obj);
                   Indent := Indent - 2;
                   if Index = Last_Index (G) then
                      PL (")");
@@ -456,7 +459,7 @@ package body TCG.Maps is
                      PL (TCG.Utils.To_Ada_Identifier (Obj.Name.all) &
                            " : aliased constant Object := (");
                      Indent := Indent + 2;
-                     Put_Object (Obj);
+                     Put_Object (M, Obj);
                      PL (");");
                      Indent := Indent - 2;
                   end if;
@@ -472,5 +475,41 @@ package body TCG.Maps is
 
       Close (Output);
    end Generate_Ada_Source;
+
+   -------------------------
+   -- Fill_Master_Tileset --
+   -------------------------
+
+   procedure Fill_Master_Tileset (M : Map) is
+      Unused : Tilesets.Master_Tile_Id;
+   begin
+      --  For all layers...
+      for L of M.Layer_List loop
+         --  For all tiles...
+         for X in 1 .. Width (L) loop
+            for Y in 1 .. Height (L) loop
+
+               --  Convert to a Master_Tile_ID to make sure the tile is
+               --  added to the master tile set.
+               Unused := Master_Tile (M, Tile (L, X, Y));
+            end loop;
+         end loop;
+
+         --  For all groups...
+         for G of M.Obj_Group_List loop
+            --  For all objects...
+            for Index in First_Index (G) .. Last_Index (G) loop
+               declare
+                  Obj : constant Object_Groups.Object := Get_Object (G, Index);
+               begin
+
+                  --  Convert the tile to a Master_Tile_ID to make sure the
+                  --  tile is added to the master tile set.
+                  Unused := Master_Tile (M, Obj.Tile_Id);
+               end;
+            end loop;
+         end loop;
+      end loop;
+   end Fill_Master_Tileset;
 
 end TCG.Maps;

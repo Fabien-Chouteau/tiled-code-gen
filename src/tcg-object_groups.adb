@@ -180,7 +180,7 @@ package body TCG.Object_Groups is
               Height  => Height,
               Points  => Poly,
               Str     => Str,
-              Tile_Id => Tilesets.Master_Tile_Id (GID));
+              Tile_Id => Tilesets.Map_Tile_Id (GID));
    end Load;
 
    ----------
