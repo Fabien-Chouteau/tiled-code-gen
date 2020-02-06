@@ -427,46 +427,52 @@ package body TCG.Maps is
 
             Indent := Indent + 3;
 
-            --  Objects as array
-            PL ("Objects : Object_Array :=");
-            Indent := Indent + 2;
-            PL ("(");
-            Indent := Indent + 2;
-            for Index in First_Index (G) .. Last_Index (G) loop
-               declare
-                  Obj : constant Object_Groups.Object := Get_Object (G, Index);
-               begin
-                  PL (Index'Img & " => (");
+            if Length (G) /= 0 then
+               --  Objects as array
+               PL ("Objects : Object_Array :=");
+               Indent := Indent + 2;
+               PL ("(");
+               Indent := Indent + 2;
+               for Index in First_Index (G) .. Last_Index (G) loop
+                  declare
+                     Obj : constant Object_Groups.Object :=
+                       Get_Object (G, Index);
+                  begin
+                     PL (Index'Img & " => (");
 
-                  Indent := Indent + 2;
-                  Put_Object (M, Obj);
-                  Indent := Indent - 2;
-                  if Index = Last_Index (G) then
-                     PL (")");
-                  else
-                     PL ("),");
-                  end if;
-               end;
-            end loop;
-            Indent := Indent - 2;
-            PL (");");
-            Indent := Indent - 2;
-
-            --  Object as indivial declaration
-            for Index in First_Index (G) .. Last_Index (G) loop
-               declare
-                  Obj : constant Object_Groups.Object := Get_Object (G, Index);
-               begin
-                  if Obj.Name /= null then
-                     PL (TCG.Utils.To_Ada_Identifier (Obj.Name.all) &
-                           " : aliased constant Object := (");
                      Indent := Indent + 2;
                      Put_Object (M, Obj);
-                     PL (");");
                      Indent := Indent - 2;
-                  end if;
-               end;
-            end loop;
+                     if Index = Last_Index (G) then
+                        PL (")");
+                     else
+                        PL ("),");
+                     end if;
+                  end;
+               end loop;
+               Indent := Indent - 2;
+               PL (");");
+               Indent := Indent - 2;
+            end if;
+
+            if Length (G) /= 0 then
+               --  Object as indivial declaration
+               for Index in First_Index (G) .. Last_Index (G) loop
+                  declare
+                     Obj : constant Object_Groups.Object :=
+                       Get_Object (G, Index);
+                  begin
+                     if Obj.Name /= null then
+                        PL (TCG.Utils.To_Ada_Identifier (Obj.Name.all) &
+                              " : aliased constant Object := (");
+                        Indent := Indent + 2;
+                        Put_Object (M, Obj);
+                        PL (");");
+                        Indent := Indent - 2;
+                     end if;
+                  end;
+               end loop;
+            end if;
             Indent := Indent - 3;
             PL ("end " & Group_Ada_Id & ";");
          end;
@@ -499,17 +505,20 @@ package body TCG.Maps is
 
          --  For all groups...
          for G of M.Obj_Group_List loop
-            --  For all objects...
-            for Index in First_Index (G) .. Last_Index (G) loop
-               declare
-                  Obj : constant Object_Groups.Object := Get_Object (G, Index);
-               begin
+            if Length (G) /= 0 then
+               --  For all objects...
+               for Index in First_Index (G) .. Last_Index (G) loop
+                  declare
+                     Obj : constant Object_Groups.Object :=
+                       Get_Object (G, Index);
+                  begin
 
-                  --  Convert the tile to a Master_Tile_ID to make sure the
-                  --  tile is added to the master tile set.
-                  Unused := Master_Tile (M, Obj.Tile_Id);
-               end;
-            end loop;
+                     --  Convert the tile to a Master_Tile_ID to make sure the
+                     --  tile is added to the master tile set.
+                     Unused := Master_Tile (M, Obj.Tile_Id);
+                  end;
+               end loop;
+            end if;
          end loop;
       end loop;
    end Fill_Master_Tileset;
