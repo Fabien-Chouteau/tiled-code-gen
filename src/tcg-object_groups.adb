@@ -102,21 +102,23 @@ package body TCG.Object_Groups is
    ----------
 
    function Load (N : Node) return Object is
-      Id            : constant Natural := Item_As_Natural (N, "id");
-      X             : constant Float := Item_As_Float (N, "x");
-      Y             : constant Float := Item_As_Float (N, "y");
-      Has_Width     : constant Boolean := Item_Exists (N, "width");
-      Has_Height    : constant Boolean := Item_Exists (N, "height");
-      Has_GID       : constant Boolean := Item_Exists (N, "gid");
-      Is_Ellipse    : Boolean;
-      Is_Point      : Boolean;
-      Str           : String_Access := null;
-      Name          : String_Access := null;
-      Height, Width : Float := 0.0;
-      GID           : Natural := 0;
-      List          : Node_List;
-      Kind          : Object_Kind;
-      Poly          : Polygon_Access;
+      Id              : Natural;
+      X               : constant Float := Item_As_Float (N, "x");
+      Y               : constant Float := Item_As_Float (N, "y");
+      Has_Width       : constant Boolean := Item_Exists (N, "width");
+      Has_Height      : constant Boolean := Item_Exists (N, "height");
+      Has_GID         : constant Boolean := Item_Exists (N, "gid");
+      Is_Ellipse      : Boolean;
+      Is_Point        : Boolean;
+      Str             : String_Access := null;
+      Name            : String_Access := null;
+      Height, Width   : Float := 0.0;
+      GID             : Unsigned_32 := 0;
+      List            : Node_List;
+      Kind            : Object_Kind;
+      Flip_Vertical   : Boolean := False;
+      Flip_Horizontal : Boolean := False;
+      Poly            : Polygon_Access;
    begin
       if Has_Width then
          Width := Item_As_Float (N, "width");
@@ -127,7 +129,12 @@ package body TCG.Object_Groups is
       end if;
 
       if Has_GID then
-         GID := Item_As_Natural (N, "gid");
+         GID := Item_As_UInt32 (N, "gid");
+
+         Flip_Vertical := (GID and 16#4000_0000#) /= 0;
+         Flip_Horizontal := (GID and 16#8000_0000#) /= 0;
+
+         GID := GID and 16#3FFF_FFFF#;
       end if;
 
       if Item_Exists (N, "name") then
@@ -172,15 +179,17 @@ package body TCG.Object_Groups is
          Kind := Rectangle_Obj;
       end if;
 
-      return (Kind    => Kind,
-              Name    => Name,
-              Id      => Id,
-              Pt      => (X, Y),
-              Width   => Width,
-              Height  => Height,
-              Points  => Poly,
-              Str     => Str,
-              Tile_Id => Tilesets.Map_Tile_Id (GID));
+      return (Kind            => Kind,
+              Name            => Name,
+              Id              => Id,
+              Pt              => (X, Y),
+              Width           => Width,
+              Height          => Height,
+              Points          => Poly,
+              Str             => Str,
+              Flip_Vertical   => Flip_Vertical,
+              Flip_Horizontal => Flip_Horizontal,
+              Tile_Id         => Tilesets.Map_Tile_Id (GID));
    end Load;
 
    ----------
@@ -188,12 +197,19 @@ package body TCG.Object_Groups is
    ----------
 
    function Load (Root : DOM.Core.Node) return Object_Group is
-      Id    : constant Natural := Item_As_Natural (Root, "id");
+      Id    : Natural;
       Name  : constant String := Item_As_String (Root, "name");
       List  : Node_List;
       N     : Node;
       Group : constant Object_Group := new Group_Data;
    begin
+      if Item_Exists (Root, "id") then
+         Id := Item_As_Natural (Root, "id");
+      else
+         --  When there is not ID it means that there is only one group
+         Id := 0;
+      end if;
+
       Group.Id := Object_Group_Id (Id);
       Group.Name := new String'(Name);
 

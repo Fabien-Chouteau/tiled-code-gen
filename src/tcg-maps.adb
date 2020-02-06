@@ -350,6 +350,8 @@ package body TCG.Maps is
 
             PL ("Width => " & Obj.Width'Img & ",");
             PL ("Height => " & Obj.Height'Img & ",");
+            PL ("Flip_Vertical => " & Obj.Flip_Vertical'Img & ",");
+            PL ("Flip_Horizontal => " & Obj.Flip_Horizontal'Img & ",");
             PL ("Tile_Id => " & Master_Tile (M, Obj.Tile_Id)'Img & ",");
 
             if Obj.Str /= null then
