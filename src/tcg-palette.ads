@@ -44,7 +44,7 @@ package TCG.Palette is
 
    type Color_Id is new Natural;
 
-   type Output_Color_Format is (ARGB, RGB565);
+   type Output_Color_Format is (ARGB, RGB565, RGB565_Swap);
 
    function Add_Color (C : ARGB_Color) return Color_Id;
 
@@ -104,5 +104,6 @@ private
 
    function Image (C : ARGB_Color) return String;
    function To_RGB565 (C : ARGB_Color) return Interfaces.Unsigned_16;
+   function To_RGB565_Swap (C : ARGB_Color) return Interfaces.Unsigned_16;
 
 end TCG.Palette;

@@ -240,7 +240,7 @@ package body TCG.Outputs.GESTE is
             Put_Line (Output, "   type Output_Color is record");
             Put_Line (Output, "      A, R, G, B : Component;");
             Put_Line (Output, "   end record;");
-         when Palette.RGB565 =>
+         when Palette.RGB565 | Palette.RGB565_Swap =>
             Put_Line (Output,
                       "   subtype Output_Color is Interfaces.Unsigned_16;");
       end case;

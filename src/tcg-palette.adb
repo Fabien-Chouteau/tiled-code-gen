@@ -65,8 +65,9 @@ package body TCG.Palette is
 
    type String_Access is access all String;
    Format_Strings : constant array (Output_Color_Format) of String_Access
-     := (ARGB   => new String'("ARGB"),
-         RGB565 => new String'("RGB565"));
+     := (ARGB        => new String'("ARGB"),
+         RGB565      => new String'("RGB565"),
+         RGB565_Swap => new String'("RGB565_Swap"));
 
    ---------------
    -- ID_Hashed --
@@ -188,6 +189,17 @@ package body TCG.Palette is
       return (Shift_Left (R, 11) or Shift_Left (G, 5) or B);
    end To_RGB565;
 
+   --------------------
+   -- To_RGB565_Swap --
+   --------------------
+
+   function To_RGB565_Swap (C : ARGB_Color) return Unsigned_16 is
+      RGB : constant Unsigned_16 := To_RGB565 (C);
+   begin
+      return Shift_Right (RGB and 16#FF00#, 8) or
+        (Shift_Left (RGB, 8) and 16#FF00#);
+   end To_RGB565_Swap;
+
    -----------
    -- Image --
    -----------
@@ -202,6 +214,8 @@ package body TCG.Palette is
             return Image (C);
          when RGB565 =>
             return To_RGB565 (C)'Img;
+         when RGB565_Swap =>
+            return To_RGB565_Swap (C)'Img;
       end case;
    end Image;
 
@@ -219,7 +233,8 @@ package body TCG.Palette is
 
    function Supported_Formats return String
    is (Format_Strings (ARGB).all & ", " &
-         Format_Strings (RGB565).all);
+         Format_Strings (RGB565).all & ", " &
+         Format_Strings (RGB565_Swap).all);
 
    -------------
    -- Convert --
