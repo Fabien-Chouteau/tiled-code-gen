@@ -131,8 +131,6 @@ package body TCG.Tilesets is
       procedure Put_Pixel (R, G, B : Palette.Component;
                            A       : Palette.Component)
       is
-         use type Palette.Component;
-
          X       : constant Natural := Current_X;
          Y       : constant Natural := (Height - 1) - Current_Y;
          Loc_Id  : Local_Tile_Id;

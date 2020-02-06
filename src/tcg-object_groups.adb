@@ -38,6 +38,7 @@ with DOM.Core.Elements; use DOM.Core.Elements;
 
 with TCG.Utils; use TCG.Utils;
 with Ada.Strings.Fixed;
+with Interfaces; use Interfaces;
 
 package body TCG.Object_Groups is
 
@@ -120,6 +121,13 @@ package body TCG.Object_Groups is
       Flip_Horizontal : Boolean := False;
       Poly            : Polygon_Access;
    begin
+      if Item_Exists (N, "id") then
+         Id := Item_As_Natural (N, "id");
+      else
+         --  When there is not ID it means that there is only one object
+         Id := 0;
+      end if;
+
       if Has_Width then
          Width := Item_As_Float (N, "width");
       end if;
@@ -239,6 +247,13 @@ package body TCG.Object_Groups is
      (This : Object_Group)
       return Object_Group_Id
    is (This.Id);
+
+   ------------
+   -- Length --
+   ------------
+
+   function Length (This : Object_Group) return Natural
+   is (Natural (This.Objects.Length));
 
    -----------------
    -- First_Index --

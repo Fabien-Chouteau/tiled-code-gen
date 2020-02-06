@@ -54,13 +54,15 @@ package TCG.Object_Groups is
 
    type Object (Kind : Object_Kind := Rectangle_Obj)
    is record
-      Name    : String_Access;
-      Id      : Natural;
-      Pt      : Point;
-      Width, Height : Float;
-      Points  : Polygon_Access;
-      Str     : String_Access;
-      Tile_Id : TCG.Tilesets.Map_Tile_Id;
+      Name            : String_Access;
+      Id              : Natural;
+      Pt              : Point;
+      Width, Height   : Float;
+      Points          : Polygon_Access;
+      Str             : String_Access;
+      Flip_Vertical   : Boolean;
+      Flip_Horizontal : Boolean;
+      Tile_Id         : TCG.Tilesets.Map_Tile_Id;
    end record;
 
    type Object_Group_Id is new Integer;
@@ -76,17 +78,20 @@ package TCG.Object_Groups is
    function Id (This : Object_Group) return Object_Group_Id
      with Pre => This /= No_Layer;
 
+   function Length (This : Object_Group) return Natural;
+
    function First_Index (This : Object_Group) return Natural
-     with Pre => This /= No_Layer;
+     with Pre => This /= No_Layer and then Length (This) /= 0;
 
    function Last_Index (This : Object_Group) return Natural
-     with Pre => This /= No_Layer;
+     with Pre => This /= No_Layer and then Length (This) /= 0;
 
    function Get_Object (This  : Object_Group;
                         Index : Natural)
                         return Object
      with Pre => This /= No_Layer
-                 and then Index in First_Index (This) .. Last_Index (This);
+     and then Length (This) /= 0
+     and then Index in First_Index (This) .. Last_Index (This);
 
 private
 

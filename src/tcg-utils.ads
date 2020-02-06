@@ -32,13 +32,16 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with DOM.Core; use DOM.Core;
+with DOM.Core;   use DOM.Core;
+with Interfaces; use Interfaces;
 
 package TCG.Utils is
 
    function Item_Exists (N : Node; Item : DOM_String) return Boolean;
 
    function Item_As_Natural (N : Node; Item : DOM_String) return Natural;
+
+   function Item_As_UInt32 (N : Node; Item : DOM_String) return Unsigned_32;
 
    function Item_As_String (N : Node; Item : DOM_String) return String;
 

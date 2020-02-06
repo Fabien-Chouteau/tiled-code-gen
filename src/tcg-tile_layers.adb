@@ -59,12 +59,19 @@ package body TCG.Tile_Layers is
    ------------
 
    function Create (N : Node) return Tile_Layer is
-      Id     : constant Natural := Item_As_Natural (N, "id");
+      Id     : Natural;
       Width  : constant Natural := Item_As_Natural (N, "width");
       Height : constant Natural := Item_As_Natural (N, "height");
       Name   : constant String := Item_As_String (N, "name");
       L      : constant Tile_Layer := new Layer_Data (Width, Height);
    begin
+      if Item_Exists (N, "id") then
+         Id := Item_As_Natural (N, "id");
+      else
+         --  When there is not ID it means that there is only one layer
+         Id := 0;
+      end if;
+
       L.Id := Tile_Layer_Id (Id);
       L.Name := new String'(Name);
       return L;

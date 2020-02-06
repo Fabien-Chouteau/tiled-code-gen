@@ -77,6 +77,13 @@ package body TCG.Utils is
    is (Natural'Value (Value (Get_Named_Item (Attributes (N), Item))));
 
    --------------------
+   -- Item_As_UInt32 --
+   --------------------
+
+   function Item_As_UInt32 (N : Node; Item : DOM_String) return Unsigned_32
+   is (Unsigned_32'Value (Value (Get_Named_Item (Attributes (N), Item))));
+
+   --------------------
    -- Item_As_String --
    --------------------
 
