@@ -44,7 +44,7 @@ package TCG.Palette is
 
    type Color_Id is new Natural;
 
-   type Output_Color_Format is (ARGB, RGB565, RGB565_Swap);
+   type Output_Color_Format is (ARGB, RGB565, RGB565_Swap, RGB555, RGB888);
 
    function Add_Color (C : ARGB_Color) return Color_Id;
 
@@ -69,6 +69,8 @@ package TCG.Palette is
                     and then In_Palette (C),
           Post => Transparent_Defined and then Transparent = C;
    --  Set the color that will be treated as transparent.
+
+   function Number_Of_Colors return Natural;
 
    function First_Id return Color_Id;
    --  Return the first valid Color_Id
@@ -105,5 +107,7 @@ private
    function Image (C : ARGB_Color) return String;
    function To_RGB565 (C : ARGB_Color) return Interfaces.Unsigned_16;
    function To_RGB565_Swap (C : ARGB_Color) return Interfaces.Unsigned_16;
+   function To_RGB555 (C : ARGB_Color) return Interfaces.Unsigned_16;
+   function To_RGB888 (C : ARGB_Color) return Interfaces.Unsigned_32;
 
 end TCG.Palette;

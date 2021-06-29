@@ -67,7 +67,9 @@ package body TCG.Palette is
    Format_Strings : constant array (Output_Color_Format) of String_Access
      := (ARGB        => new String'("ARGB"),
          RGB565      => new String'("RGB565"),
-         RGB565_Swap => new String'("RGB565_Swap"));
+         RGB565_Swap => new String'("RGB565_Swap"),
+         RGB555      => new String'("RGB555"),
+         RGB888      => new String'("RGB888"));
 
    ---------------
    -- ID_Hashed --
@@ -126,6 +128,10 @@ package body TCG.Palette is
    function Transparent return ARGB_Color
    is (Transparent_Color);
 
+   ---------------------
+   -- Set_Transparent --
+   ---------------------
+
    procedure Set_Transparent (C : ARGB_Color) is
    begin
       if Transparent_Has_Definition and then Transparent_Color /= C then
@@ -133,10 +139,19 @@ package body TCG.Palette is
            "Incompatible new definition of transparent color";
       end if;
 
-      Transparent_Color_Id := Add_Color (C);
+      --  Transparent_Color_Id := Add_Color (C);
+      Convert_Vect.Replace_Element (Transparent_Color_Id, C);
+      Hashmap.Insert (C, Transparent_Color_Id);
       Transparent_Color := C;
       Transparent_Has_Definition := True;
    end Set_Transparent;
+
+   ----------------------
+   -- Number_Of_Colors --
+   ----------------------
+
+   function Number_Of_Colors return Natural
+   is (Natural (Convert_Vect.Length));
 
    --------------
    -- First_Id --
@@ -200,6 +215,33 @@ package body TCG.Palette is
         (Shift_Left (RGB, 8) and 16#FF00#);
    end To_RGB565_Swap;
 
+   ---------------
+   -- To_RGB888 --
+   ---------------
+
+   function To_RGB888 (C : ARGB_Color) return Unsigned_32 is
+      R : constant Unsigned_32 := Shift_Left (Unsigned_32 (C.R), 16);
+      G : constant Unsigned_32 := Shift_Left (Unsigned_32 (C.G), 8);
+      B : constant Unsigned_32 := Shift_Left (Unsigned_32 (C.B), 0);
+   begin
+      return R or G or B;
+   end To_RGB888;
+
+   ---------------
+   -- To_RGB555 --
+   ---------------
+
+   function To_RGB555 (C : ARGB_Color) return Unsigned_16 is
+      R : constant Unsigned_16 :=
+        Shift_Right (Unsigned_16 (C.R), 3) and 16#1F#;
+      G : constant Unsigned_16 :=
+        Shift_Right (Unsigned_16 (C.G), 3) and 16#1F#;
+      B : constant Unsigned_16 :=
+        Shift_Right (Unsigned_16 (C.B), 3) and 16#1F#;
+   begin
+      return (Shift_Left (B, 10) or Shift_Left (G, 5) or R);
+   end To_RGB555;
+
    -----------
    -- Image --
    -----------
@@ -216,6 +258,10 @@ package body TCG.Palette is
             return To_RGB565 (C)'Img;
          when RGB565_Swap =>
             return To_RGB565_Swap (C)'Img;
+         when RGB555 =>
+            return To_RGB555 (C)'Img;
+         when RGB888 =>
+            return To_RGB888 (C)'Img;
       end case;
    end Image;
 
@@ -273,4 +319,10 @@ package body TCG.Palette is
    is ("(" & C.A'Img & "," & C.R'Img & "," &
          C.G'Img & "," & C.B'Img & ")");
 
+begin
+
+   Transparent_Color_Id := Add_Color ((0, 0, 0, 0));
+   if Transparent_Color_Id /= 0 then
+      raise Program_Error with "Transparent_Color_Id should be zero";
+   end if;
 end TCG.Palette;

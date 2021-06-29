@@ -42,20 +42,51 @@ with DOM.Core.Attrs; use DOM.Core.Attrs;
 
 package body TCG.Utils is
 
-   ----------------
-   -- ID_Mapping --
-   ----------------
+   --------------------
+   -- Ada_ID_Mapping --
+   --------------------
 
-   function ID_Mapping (From : Character) return Character
+   function Ada_ID_Mapping (From : Character) return Character
    is (case From is
           when 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' => From,
           when others => '_');
 
-   ----------------------
-   -- Filename_Mapping --
-   ----------------------
+   --------------------------
+   -- Ada_Filename_Mapping --
+   --------------------------
 
-   function Filename_Mapping (From : Character) return Character
+   function Ada_Filename_Mapping (From : Character) return Character
+   is (case From is
+          when 'a' .. 'z' | '0' .. '9' => From,
+          when 'A' .. 'Z' => GNAT.Case_Util.To_Lower (From),
+          when '.' => '-',
+          when others => '_');
+
+   ---------------------
+   -- Rust_ID_Mapping --
+   ---------------------
+
+   function Rust_ID_Mapping (From : Character) return Character
+   is (case From is
+          when 'a' .. 'z' | '0' .. '9' => From,
+          when 'A' .. 'Z' => GNAT.Case_Util.To_Lower (From),
+          when others => '_');
+
+   ----------------------------
+   -- Rust_Static_ID_Mapping --
+   ----------------------------
+
+   function Rust_Static_ID_Mapping (From : Character) return Character
+   is (case From is
+          when 'A' .. 'Z' | '0' .. '9' => From,
+          when 'a' .. 'z' => GNAT.Case_Util.To_Upper (From),
+          when others => '_');
+
+   ---------------------------
+   -- Rust_Filename_Mapping --
+   ---------------------------
+
+   function Rust_Filename_Mapping (From : Character) return Character
    is (case From is
           when 'a' .. 'z' | '0' .. '9' => From,
           when 'A' .. 'Z' => GNAT.Case_Util.To_Lower (From),
@@ -102,7 +133,7 @@ package body TCG.Utils is
    -----------------------
 
    function To_Ada_Identifier (Str : String) return String
-   is (Translate (Str, ID_Mapping'Access));
+   is (Translate (Str, Ada_ID_Mapping'Access));
 
    ---------------------
    -- To_Ada_Filename --
@@ -111,8 +142,29 @@ package body TCG.Utils is
    function To_Ada_Filename (Str     : String;
                              Is_Spec : Boolean := True)
                              return String
-   is (Translate (Str, Filename_Mapping'Access) &
+   is (Translate (Str, Ada_Filename_Mapping'Access) &
        (if Is_Spec then ".ads" else ".adb"));
+
+   ------------------------
+   -- To_Rust_Identifier --
+   ------------------------
+
+   function To_Rust_Identifier (Str : String) return String
+   is (Translate (Str, Rust_ID_Mapping'Access));
+
+   -------------------------------
+   -- To_Rust_Static_Identifier --
+   -------------------------------
+
+   function To_Rust_Static_Identifier (Str : String) return String
+   is (Translate (Str, Rust_Static_ID_Mapping'Access));
+
+   ----------------------
+   -- To_Rust_Filename --
+   ----------------------
+
+   function To_Rust_Filename (Str : String) return String
+   is (Translate (Str, Rust_Filename_Mapping'Access) & ".rs");
 
    ----------------
    -- Ensure_Dir --

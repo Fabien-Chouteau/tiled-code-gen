@@ -2,7 +2,7 @@
 --                                                                          --
 --                             tiled-code-gen                               --
 --                                                                          --
---                    Copyright (C) 2018 Fabien Chouteau                    --
+--                    Copyright (C) 2021 Fabien Chouteau                    --
 --                                                                          --
 --                                                                          --
 --  Redistribution and use in source and binary forms, with or without      --
@@ -37,34 +37,30 @@ with Ada.Text_IO;     use Ada.Text_IO;
 
 with TCG.Utils; use TCG.Utils;
 with TCG.Tilesets;
+with TCG.Palette;
 use TCG;
 
-package body TCG.Outputs.GESTE is
+package body TCG.Outputs.LibGBA is
 
    use type Tilesets.Master_Tile_Id;
    use type Palette.Color_Id;
 
-   procedure Generate_Tileset (Filepath     : String;
-                               Package_Name : String);
+   procedure Generate_Charblock (Filepath     : String;
+                                 Package_Name : String);
 
    procedure Generate_Tileset_Collisions (Filepath     : String;
                                           Package_Name : String);
-
-   procedure Generate_GESET_Config
-     (Filename     : String;
-      Package_Name : String;
-      Format       : Palette.Output_Color_Format);
 
    procedure Generate_Root_Package
      (Filename     : String;
       Package_Name : String;
       Format       : Palette.Output_Color_Format);
 
-   ----------------------
-   -- Generate_Tileset --
-   ----------------------
+   ------------------------
+   -- Generate_Charblock --
+   ------------------------
 
-   procedure Generate_Tileset (Filepath     : String;
+   procedure Generate_Charblock (Filepath     : String;
                                Package_Name : String)
    is
       Output : Ada.Text_IO.File_Type;
@@ -88,50 +84,51 @@ package body TCG.Outputs.GESTE is
          New_Line (Output);
       end NL;
    begin
+      pragma Style_Checks ("M200");
+
       Create (Output, Out_File, Filepath);
-      PL ("with GESTE;");
+      PL ("with GBA.Graphics.Charblocks;");
       PL ("pragma Style_Checks (Off);");
       PL ("package " & Package_Name & " is");
       NL;
-      PL ("   Tiles : aliased constant GESTE.Tile_Array :=");
+      PL ("   Block : aliased constant GBA.Graphics.Charblocks.Charblock_Raw :=");
       PL ("     (");
 
       for Id in Tilesets.First_Id .. Tilesets.Last_Id loop
-         if Id /= Tilesets.No_Tile then
-            P ("     " & Id'Img & " => (");
+         for Y in 1 .. Tilesets.Tile_Height loop
+
+            P ("             ");
+
             for X in 1 .. Tilesets.Tile_Width loop
-
-               if X /= 1 then
-                  P ("             ");
-               end if;
-               P ("(");
-
-               for Y in 1 .. Tilesets.Tile_Height loop
+               if Id /= Tilesets.No_Tile and then Id <= Tilesets.Last_Id then
                   P (Palette.Color_Id'Image ((Tilesets.Pix (Id, X, Y))));
-                  if Y /= Tilesets.Tile_Height then
-                     P (",");
-                  end if;
-               end loop;
-               P (")");
-               if X /= Tilesets.Tile_Width then
-                  PL (",");
                else
-                  P (")");
+                  P (" 0");
+               end if;
+
+               if X /= Tilesets.Tile_Width then
+                  P (",");
                end if;
             end loop;
 
-            if Id /= Tilesets.Last_Id then
+            if Y /= Tilesets.Tile_Height then
                PL (",");
             else
-               PL (");");
+               P ("");
             end if;
+         end loop;
+
+         if Id /= Tilesets.Last_Id then
+            PL (",");
+         else
+               PL (");");
          end if;
       end loop;
 
       PL ("end " & Package_Name & ";");
 
       Close (Output);
-   end Generate_Tileset;
+   end Generate_Charblock;
 
    ---------------------------------
    -- Generate_Tileset_Collisions --
@@ -162,47 +159,44 @@ package body TCG.Outputs.GESTE is
       end NL;
    begin
       Create (Output, Out_File, Filepath);
-      PL ("with GESTE;");
+      PL ("with GBA.Graphics.Charblocks;");
       PL ("pragma Style_Checks (Off);");
       PL ("package " & Package_Name & " is");
       NL;
-      PL ("   Tiles : aliased constant GESTE.Tile_Collisions_Array :=");
+      PL ("   Block : aliased constant GBA.Graphics.Charblocks.Charblock_Raw :=");
       PL ("     (");
 
       for Id in Tilesets.First_Id .. Tilesets.Last_Id loop
-         if Id /= Tilesets.No_Tile then
-            P ("     " & Id'Img & " => (");
+         for Y in 1 .. Tilesets.Tile_Height loop
+
+            P ("             ");
+
             for X in 1 .. Tilesets.Tile_Width loop
-
-               if X /= 1 then
-                  P ("             ");
-               end if;
-               P ("(");
-
-               for Y in 1 .. Tilesets.Tile_Height loop
-
-                  P (if Tilesets.Collision (Id, X, Y) then
-                        "True"
-                     else
-                        "False");
-
-                  if Y /= Tilesets.Tile_Height then
-                     P (",");
-                  end if;
-               end loop;
-               P (")");
+               P (if Id /= Tilesets.No_Tile
+                    and then
+                     Id <= Tilesets.Last_Id
+                    and then
+                     Tilesets.Collision (Id, X, Y)
+                  then
+                     "1"
+                  else
+                     "0");
                if X /= Tilesets.Tile_Width then
-                  PL (",");
-               else
-                  P (")");
+                  P (",");
                end if;
             end loop;
 
-            if Id /= Tilesets.Last_Id then
+            if Y /= Tilesets.Tile_Height then
                PL (",");
             else
-               PL (");");
+               P ("");
             end if;
+         end loop;
+
+         if Id /= Tilesets.Last_Id then
+            PL (",");
+         else
+               PL (");");
          end if;
       end loop;
 
@@ -210,60 +204,6 @@ package body TCG.Outputs.GESTE is
 
       Close (Output);
    end Generate_Tileset_Collisions;
-
-   ---------------------------
-   -- Generate_GESET_Config --
-   ---------------------------
-
-   procedure Generate_GESET_Config
-     (Filename     : String;
-      Package_Name : String;
-      Format       : Palette.Output_Color_Format)
-   is
-      Output : File_Type;
-   begin
-      Create (Output, Out_File, Filename);
-
-      Put_Line (Output, "with Interfaces;");
-      New_Line (Output);
-      Put_Line (Output, "package " & Package_Name & " is");
-      New_Line (Output);
-
-      Put_Line (Output, "   type Color_Index is range " &
-                  Palette.First_Id'Img & " .. " &
-                  Palette.Last_Id'Img & ";");
-      New_Line (Output);
-      case Format is
-         when Palette.ARGB =>
-            Put_Line (Output, "   type Component is 0 .. 255 with Size => 8;");
-            New_Line (Output);
-            Put_Line (Output, "   type Output_Color is record");
-            Put_Line (Output, "      A, R, G, B : Component;");
-            Put_Line (Output, "   end record;");
-         when Palette.RGB565 | Palette.RGB565_Swap | Palette.RGB555 =>
-            Put_Line (Output,
-                      "   subtype Output_Color is Interfaces.Unsigned_16;");
-         when Palette.RGB888 =>
-            Put_Line (Output,
-                      "   subtype Output_Color is Interfaces.Unsigned_32;");
-      end case;
-
-      New_Line (Output);
-      Put_Line (Output, "   Transparent : constant Output_Color := " &
-                  Palette.Image (Palette.Transparent, Format) & ";");
-
-      New_Line (Output);
-      Put_Line (Output, "   Tile_Size : constant := " &
-                  Tilesets.Tile_Width'Img & ";");
-
-      New_Line (Output);
-      Put_Line (Output, "   type Tile_Index is range 0 .."  &
-                  Tilesets.Number_Of_Tiles'Img & ";");
-
-      Put_Line (Output, "   No_Tile : constant Tile_Index := 0;");
-      Put_Line (Output, "end " & Package_Name & ";");
-      Close (Output);
-   end Generate_GESET_Config;
 
    ---------------------------
    -- Generate_Root_Package --
@@ -278,24 +218,49 @@ package body TCG.Outputs.GESTE is
    begin
       Create (Output, Out_File, Filename);
 
-      Put_Line (Output, "with GESTE;");
-      Put_Line (Output, "with GESTE.Maths_Types;");
-      Put_Line (Output, "with GESTE_Config;");
+      Put_Line (Output, "with GBA.Graphics.Palettes;");
+      Put_Line (Output, "with GBA.Graphics.Charblocks;");
       New_Line (Output);
       Put_Line (Output, "pragma Style_Checks (Off);");
       Put_Line (Output, "package " & Package_Name & " is");
       New_Line (Output);
 
       New_Line (Output);
-      Put_Line (Output, "   Palette : aliased GESTE.Palette_Type := (");
-      for Id in Palette.First_Id .. Palette.Last_Id loop
-         Put (Output, "     " & Id'Img & " => " &
-                Palette.Image (Palette.Convert (Id), Format));
+      Put_Line (Output,
+                "   Palette : aliased GBA.Graphics.Palettes.Palette := (");
 
-         if Id /= Palette.Last_Id then
-            Put_Line (Output, ",");
+      declare
+         use TCG.Palette;
+
+         First : constant Color_Id := Palette.First_Id;
+         Last  : constant Color_Id := Palette.Last_Id;
+
+         --  The GBA palettes have fixed size 256 colors
+         Max   : constant Color_Id := 255;
+      begin
+         if First /= 0 then
+            raise Program_Error with "expected Palette.First_Id = 0";
          end if;
-      end loop;
+
+         if Last > 255 then
+            raise Program_Error with "Palette size (" &
+              Palette.Number_Of_Colors'Img &
+              ")  above maximum allowed for LibGBA (256)";
+         end if;
+
+         for Id in First .. Max  loop
+            if Id <= Last then
+               Put (Output, "     " & Id'Img & " => " &
+                      Palette.Image (Palette.Convert (Id), Format));
+            else
+               Put (Output, "     " & Id'Img & " => 0");
+            end if;
+
+            if Id /= Max then
+               Put_Line (Output, ",");
+            end if;
+         end loop;
+      end;
       Put_Line (Output, ");");
 
       New_Line (Output);
@@ -309,15 +274,16 @@ package body TCG.Outputs.GESTE is
       Put_Line (Output, "   is record");
       Put_Line (Output, "      Name           : String_Access;");
       Put_Line (Output, "      Id             : Natural;");
-      Put_Line (Output, "      X              : GESTE.Maths_Types.Value;");
-      Put_Line (Output, "      Y              : GESTE.Maths_Types.Value;");
-      Put_Line (Output, "      Width          : GESTE.Maths_Types.Value;");
-      Put_Line (Output, "      Height         : GESTE.Maths_Types.Value;");
+      Put_Line (Output, "      X              : Float;");
+      Put_Line (Output, "      Y              : Float;");
+      Put_Line (Output, "      Width          : Float;");
+      Put_Line (Output, "      Height         : Float;");
       --  Put_Linr (Output, "      Points  : Polygon_Access;");
       Put_Line (Output, "      Str            : String_Access;");
       Put_Line (Output, "      Flip_Vertical  : Boolean;");
       Put_Line (Output, "      Flip_Horizontal: Boolean;");
-      Put_Line (Output, "      Tile_Id        : GESTE_Config.Tile_Index;");
+      Put_Line
+        (Output, "      Tile_Id        : GBA.Graphics.Charblocks.Tile_Id;");
       Put_Line (Output, "   end record;");
       New_Line (Output);
       Put_Line (Output, "   type Object_Array is array (Natural range <>)");
@@ -327,16 +293,16 @@ package body TCG.Outputs.GESTE is
       Close (Output);
    end Generate_Root_Package;
 
-   -----------------
-   -- Gen_PDF_Doc --
-   -----------------
+   -----------------------
+   -- Gen_LibGBA_Source --
+   -----------------------
 
-   procedure Gen_GESTE_Source
+   procedure Gen_LibGBA_Source
      (Directory          : String;
       Root_Package_Name  : String;
-      Format             : Palette.Output_Color_Format;
       Map_List           : TCG.Maps.List.List)
    is
+      Format : constant Palette.Output_Color_Format := Palette.RGB555;
    begin
       if not TCG.Utils.Make_Dir (Directory) then
          Ada.Text_IO.Put_Line
@@ -349,13 +315,15 @@ package body TCG.Outputs.GESTE is
          raise Program_Error with "Tiles are not square";
       end if;
 
-      declare
-         Package_Name : constant String := "GESTE_Config";
-         Filename     : constant String :=
-           Compose (Directory, To_Ada_Filename (Package_Name));
-      begin
-         Generate_GESET_Config (Filename, Package_Name, Format);
-      end;
+      if Tilesets.Tile_Width /= 8 then
+         raise Program_Error with "Only 8x8 tiles allowed for LibGBA";
+      end if;
+
+      if Tilesets.Number_Of_Tiles > 512 then
+         raise Program_Error
+           with "Number of tiles (" & Tilesets.Number_Of_Tiles'Img &
+           ") above maximum allowed for LibGBA (512)";
+      end if;
 
       declare
          Package_Name : constant String := Root_Package_Name;
@@ -366,16 +334,16 @@ package body TCG.Outputs.GESTE is
       end;
 
       declare
-         Package_Name : constant String := Root_Package_Name & ".Tileset";
+         Package_Name : constant String := Root_Package_Name & ".Charblock";
          Filename     : constant String :=
            Compose (Directory, To_Ada_Filename (Package_Name));
       begin
-         Generate_Tileset (Filename, Package_Name);
+         Generate_Charblock (Filename, Package_Name);
       end;
 
       declare
          Package_Name : constant String :=
-           Root_Package_Name & ".Tileset_Collisions";
+           Root_Package_Name & ".Collisions";
          Filename     : constant String :=
            Compose (Directory, To_Ada_Filename (Package_Name));
       begin
@@ -389,10 +357,10 @@ package body TCG.Outputs.GESTE is
             Filename     : constant String :=
               Compose (Directory, To_Ada_Filename (Package_Name));
          begin
-            TCG.Maps.Generate_GESTE_Source (Map, Package_Name, Filename);
+            TCG.Maps.Generate_LibGBA_Source (Map, Package_Name, Filename);
          end;
       end loop;
 
-   end Gen_GESTE_Source;
+   end Gen_LibGBA_Source;
 
-end TCG.Outputs.GESTE;
+end TCG.Outputs.LibGBA;

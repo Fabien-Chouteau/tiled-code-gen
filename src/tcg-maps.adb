@@ -281,11 +281,11 @@ package body TCG.Maps is
                           return Object_Groups.Object_Group
    is (This.Obj_Group_List.Element (Index));
 
-   -------------------------
-   -- Generate_Ada_Source --
-   -------------------------
+   ---------------------------
+   -- Generate_GESTE_Source --
+   ---------------------------
 
-   procedure Generate_Ada_Source (M            : Map;
+   procedure Generate_GESTE_Source (M            : Map;
                                   Package_Name : String;
                                   Filepath     : String)
    is
@@ -482,7 +482,416 @@ package body TCG.Maps is
       PL ("end " & Package_Name & ";");
 
       Close (Output);
-   end Generate_Ada_Source;
+   end Generate_GESTE_Source;
+
+   ----------------------------
+   -- Generate_LibGBA_Source --
+   ----------------------------
+
+   procedure Generate_LibGBA_Source (M            : Map;
+                                     Package_Name : String;
+                                     Filepath     : String)
+   is
+      Output : File_Type;
+      Indent : Natural := 0;
+
+      procedure P (Str : String);
+      procedure PL (Str : String);
+      procedure NL;
+      procedure Put_Object (M   : Map;
+                            Obj : Object_Groups.Object);
+
+      -------
+      -- P --
+      -------
+
+      procedure P (Str : String) is
+      begin
+         Put (Output, Str);
+      end P;
+
+      --------
+      -- PL --
+      --------
+
+      procedure PL (Str : String) is
+      begin
+         for X in 1 .. Indent loop
+            Put (Output, " ");
+         end loop;
+         Put_Line (Output, Str);
+      end PL;
+
+      --------
+      -- NL --
+      --------
+
+      procedure NL is
+      begin
+         New_Line (Output);
+      end NL;
+
+      ----------------
+      -- Put_Object --
+      ----------------
+
+      procedure Put_Object (M   : Map;
+                            Obj : Object_Groups.Object)
+      is
+      begin
+            PL ("Kind => " & Obj.Kind'Img & ",");
+            PL ("Id   => " & Obj.Id'Img & ",");
+
+            if Obj.Name /= null then
+               --  PL ("Name => new String'(""" & Obj.Name.all & """),");
+               PL ("Name => null,");
+            else
+               PL ("Name => null,");
+            end if;
+
+            PL ("X    => " & Obj.Pt.X'Img & ",");
+            PL ("Y    => " & Obj.Pt.Y'Img & ",");
+
+            PL ("Width => " & Obj.Width'Img & ",");
+            PL ("Height => " & Obj.Height'Img & ",");
+            PL ("Flip_Vertical => " & Obj.Flip_Vertical'Img & ",");
+            PL ("Flip_Horizontal => " & Obj.Flip_Horizontal'Img & ",");
+            PL ("Tile_Id => " & Master_Tile (M, Obj.Tile_Id)'Img & ",");
+
+            if Obj.Str /= null then
+               --  PL ("Str => new String'(""" & Obj.Str.all & """)");
+               PL ("Str => null");
+            else
+               PL ("Str => null");
+            end if;
+      end Put_Object;
+   begin
+      pragma Style_Checks ("M200");
+
+      Create (Output, Out_File, Filepath);
+
+      PL ("with GBA.Graphics.Background.Viewport;");
+      PL ("pragma Style_Checks (Off);");
+      PL ("package " & Package_Name & " is");
+
+      NL;
+      Indent := Indent + 3;
+      PL ("--  " & M.Name.all);
+      PL ("Width       : constant :=" & M.Width'Img & ";");
+      PL ("Height      : constant :=" & M.Height'Img & ";");
+      PL ("Tile_Width  : constant :=" & M.Tile_Width'Img & ";");
+      PL ("Tile_Height : constant :=" & M.Tile_Height'Img & ";");
+      NL;
+
+      for L of M.Layer_List loop
+         declare
+            Layer_Ada_Id : constant String := To_Ada_Identifier (Name (L));
+         begin
+            PL ("--  " & Name (L));
+            PL ("package " & Layer_Ada_Id & " is");
+            Indent := Indent + 3;
+            PL ("Width  : constant := " & Width (L)'Img & ";");
+            PL ("Height : constant := " & Height (L)'Img & ";");
+            PL ("Data   : aliased GBA.Graphics.Background.Viewport.Raw_Screenblock :=");
+            P  ("  (");
+
+            for Y in 1 .. Height (L) loop
+
+               if Y /= 1 then
+                  P ("         ");
+               end if;
+
+               for X in 1 .. Width (L) loop
+                  P (Master_Tile (M, Tile (L, X, Y))'Img);
+                  if X /= Width (L) then
+                     P (",");
+                  end if;
+               end loop;
+
+               if Y /= Height (L) then
+                  P (",");
+                  NL;
+               else
+                  P (")");
+               end if;
+            end loop;
+            PL (";");
+
+            PL ("Info : constant GBA.Graphics.Background.Viewport.Map_Info := (Data'Access, Width, Height);");
+            Indent := Indent - 3;
+            PL ("end " & Layer_Ada_Id & ";");
+            NL;
+         end;
+      end loop;
+
+      for G of M.Obj_Group_List loop
+         declare
+            Group_Ada_Id : constant String := To_Ada_Identifier (Name (G));
+         begin
+            PL ("package " & Group_Ada_Id & " is");
+
+            Indent := Indent + 3;
+
+            if Length (G) /= 0 then
+               --  Objects as array
+               PL ("Objects : Object_Array :=");
+               Indent := Indent + 2;
+               PL ("(");
+               Indent := Indent + 2;
+               for Index in First_Index (G) .. Last_Index (G) loop
+                  declare
+                     Obj : constant Object_Groups.Object :=
+                       Get_Object (G, Index);
+                  begin
+                     PL (Index'Img & " => (");
+
+                     Indent := Indent + 2;
+                     Put_Object (M, Obj);
+                     Indent := Indent - 2;
+                     if Index = Last_Index (G) then
+                        PL (")");
+                     else
+                        PL ("),");
+                     end if;
+                  end;
+               end loop;
+               Indent := Indent - 2;
+               PL (");");
+               Indent := Indent - 2;
+            end if;
+
+            if Length (G) /= 0 then
+               --  Object as indivial declaration
+               for Index in First_Index (G) .. Last_Index (G) loop
+                  declare
+                     Obj : constant Object_Groups.Object :=
+                       Get_Object (G, Index);
+                  begin
+                     if Obj.Name /= null then
+                        PL (TCG.Utils.To_Ada_Identifier (Obj.Name.all) &
+                              " : aliased constant Object := (");
+                        Indent := Indent + 2;
+                        Put_Object (M, Obj);
+                        PL (");");
+                        Indent := Indent - 2;
+                     end if;
+                  end;
+               end loop;
+            end if;
+            Indent := Indent - 3;
+            PL ("end " & Group_Ada_Id & ";");
+         end;
+      end loop;
+      Indent := Indent - 3;
+
+      PL ("end " & Package_Name & ";");
+
+      Close (Output);
+   end Generate_LibGBA_Source;
+
+   --------------------------
+   -- Generate_RSTE_Source --
+   --------------------------
+
+   procedure Generate_RSTE_Source (M        : Map;
+                                   Filepath : String)
+   is
+      Output : File_Type;
+      Indent : Natural := 0;
+
+      procedure P (Str : String);
+      procedure PL (Str : String);
+      procedure NL;
+      procedure Put_Object (M   : Map;
+                            Obj : Object_Groups.Object);
+      function Rust_Boolean (B : Boolean) return String;
+      function Rust_Object_Kind (O : Object_Kind) return String;
+
+      ------------------
+      -- Rust_Boolean --
+      ------------------
+
+      function Rust_Boolean (B : Boolean) return String
+      is (if B then "true" else "false");
+
+      ----------------------
+      -- Rust_Object_Kind --
+      ----------------------
+
+      function Rust_Object_Kind (O : Object_Kind) return String
+      is (case O is
+             when Point_Obj     => "super::super::ObjectKind::Point",
+             when Rectangle_Obj => "super::super::ObjectKind::Rectangle",
+             when Ellipse_Obj   => "super::super::ObjectKind::Ellipse",
+             when Polygon_Obj   => "super::super::ObjectKind::Polygon",
+             when Tile_Obj      => "super::super::ObjectKind::Tile",
+             when Text_Obj      => "super::super::ObjectKind::Text");
+
+      -------
+      -- P --
+      -------
+
+      procedure P (Str : String) is
+      begin
+         Put (Output, Str);
+      end P;
+
+      --------
+      -- PL --
+      --------
+
+      procedure PL (Str : String) is
+      begin
+         for X in 1 .. Indent loop
+            Put (Output, " ");
+         end loop;
+         Put_Line (Output, Str);
+      end PL;
+
+      --------
+      -- NL --
+      --------
+
+      procedure NL is
+      begin
+         New_Line (Output);
+      end NL;
+
+      ----------------
+      -- Put_Object --
+      ----------------
+
+      procedure Put_Object (M   : Map;
+                            Obj : Object_Groups.Object)
+      is
+      begin
+         PL ("kind : " & Rust_Object_Kind (Obj.Kind) & ",");
+         PL ("id   : " & Obj.Id'Img & ",");
+
+         if Obj.Name /= null then
+            PL ("name :""" & Obj.Name.all & """,");
+         else
+            PL ("name : """",");
+         end if;
+
+         PL ("x    : " & Obj.Pt.X'Img & ",");
+         PL ("y    : " & Obj.Pt.Y'Img & ",");
+
+         PL ("width : " & Obj.Width'Img & ",");
+         PL ("height : " & Obj.Height'Img & ",");
+         PL ("flip_vertical : " & Rust_Boolean (Obj.Flip_Vertical) & ",");
+         PL ("flip_horizontal : " & Rust_Boolean (Obj.Flip_Horizontal) & ",");
+         PL ("tile_id : " & Master_Tile (M, Obj.Tile_Id)'Img & ",");
+
+         if Obj.Str /= null then
+            PL ("str : """ & Obj.Str.all & """,");
+         else
+            PL ("str : """",");
+         end if;
+      end Put_Object;
+   begin
+      Create (Output, Out_File, Filepath);
+
+      PL ("//  " & M.Name.all);
+      PL ("#[allow(unused_imports)]");
+      NL;
+      PL ("const WIDTH       : usize =" & M.Width'Img & ";");
+      PL ("const HEIGHT      : usize =" & M.Height'Img & ";");
+      PL ("const TILE_WIDTH  : usize =" & M.Tile_Width'Img & ";");
+      PL ("const TILE_HEIGHT : usize =" & M.Tile_Height'Img & ";");
+      NL;
+
+      for L of M.Layer_List loop
+         PL ("pub mod " & To_Rust_Identifier (Name (L)) & " {");
+         Indent := Indent + 4;
+         PL ("use sprite_and_tile::*;");
+         PL ("pub const WIDTH  : usize = " & Width (L)'Img & ";");
+         PL ("pub const HEIGHT : usize = " & Height (L)'Img & ";");
+         PL ("pub static TILE_MAP_DATA : [usize;" &
+               Integer'Image (Width (L) * Height (L)) & "] =");
+         P  ("        [");
+
+         for Y in 1 .. Height (L) loop
+
+            if Y /= 1 then
+               P ("         ");
+            end if;
+
+            for X in 1 .. Width (L) loop
+               P (Master_Tile (M, Tile (L, X, Y))'Img);
+               P (",");
+            end loop;
+            if Y /= Height (L) then
+               NL;
+            end if;
+         end loop;
+         PL ("];");
+
+         PL ("static TILE_MAP : TileMap =");
+         PL ("   TileMap {width  : WIDTH,");
+         PL ("            height : HEIGHT,");
+         PL ("            map    : & TILE_MAP_DATA}; ");
+         Indent := Indent - 4;
+
+         PL ("}");
+         NL;
+      end loop;
+
+      for G of M.Obj_Group_List loop
+         PL ("pub mod " & To_Rust_Identifier (Name (G)) & " {");
+
+         Indent := Indent + 3;
+
+         if Length (G) /= 0 then
+            --  Objects as array
+            PL ("pub static OBJECTS : [super::super::Object;" &
+                  Length (G)'Img & "] =");
+            Indent := Indent + 2;
+            PL ("[");
+            Indent := Indent + 2;
+            for Index in First_Index (G) .. Last_Index (G) loop
+               declare
+                  Obj : constant Object_Groups.Object :=
+                    Get_Object (G, Index);
+               begin
+                  PL ("super::super::Object {");
+
+                  Indent := Indent + 2;
+                  Put_Object (M, Obj);
+                  Indent := Indent - 2;
+                  PL ("},");
+               end;
+            end loop;
+            Indent := Indent - 2;
+            PL ("];");
+            Indent := Indent - 2;
+         end if;
+
+         if Length (G) /= 0 then
+            --  Object as indivial declaration
+            for Index in First_Index (G) .. Last_Index (G) loop
+               declare
+                  Obj : constant Object_Groups.Object :=
+                    Get_Object (G, Index);
+               begin
+                  if Obj.Name /= null then
+                     PL ("pub static " &
+                           TCG.Utils.To_Rust_Static_Identifier (Obj.Name.all) &
+                           " : super::super::Object = " &
+                           "super::super::Object {");
+                     Indent := Indent + 2;
+                     Put_Object (M, Obj);
+                     PL ("};");
+                     Indent := Indent - 2;
+                  end if;
+               end;
+            end loop;
+         end if;
+         Indent := Indent - 3;
+         PL ("}");
+      end loop;
+      Close (Output);
+   end Generate_RSTE_Source;
 
    -------------------------
    -- Fill_Master_Tileset --

@@ -91,9 +91,16 @@ package TCG.Maps is
                           return Object_Groups.Object_Group
      with Pre => This /= No_Map;
 
-   procedure Generate_Ada_Source (M            : Map;
-                                  Package_Name : String;
-                                  Filepath     : String);
+   procedure Generate_GESTE_Source (M            : Map;
+                                    Package_Name : String;
+                                    Filepath     : String);
+
+   procedure Generate_LibGBA_Source (M            : Map;
+                                     Package_Name : String;
+                                     Filepath     : String);
+
+   procedure Generate_RSTE_Source (M        : Map;
+                                   Filepath : String);
 
    procedure Fill_Master_Tileset (M : Map);
    --  Fill the master tileset with all the tiles and only the tiles used in

@@ -42,6 +42,8 @@ with TCG.Maps.Render;
 with TCG.Maps.List;
 with TCG.Outputs.PDF;
 with TCG.Outputs.GESTE;
+with TCG.Outputs.LibGBA;
+with TCG.Outputs.RSTE;
 with TCG.Tilesets;
 use TCG;
 
@@ -56,6 +58,8 @@ procedure Tiled_Code_Gen is
    Config           : Command_Line_Configuration;
    PDF_Enabled      : aliased Boolean;
    GESTE_Enabled    : aliased Boolean;
+   RSTE_Enabled     : aliased Boolean;
+   GBA_Enabled      : aliased Boolean;
    BMP_Enabled      : aliased Boolean;
    Source_Out_Dir   : aliased String_Access := new String'("src");
    Doc_Out_Dir      : aliased String_Access := new String'("doc");
@@ -78,6 +82,16 @@ begin
         (Config, GESTE_Enabled'Access, "-g",
          Long_Switch => "--geste",
          Help => "Generate code for GEneric Sprite and Tile Engine");
+
+      Define_Switch
+        (Config, RSTE_Enabled'Access, "",
+         Long_Switch => "--rste",
+         Help => "Generate code for Rust Sprite and Tile Engine");
+
+      Define_Switch
+        (Config, GBA_Enabled'Access, "",
+         Long_Switch => "--libgba",
+         Help => "Generate code for Rust Sprite and Tile Engine");
 
       Define_Switch
         (Config, BMP_Enabled'Access, "-b",
@@ -169,6 +183,20 @@ begin
                                       Map_List          => List);
    end if;
 
+   if GBA_Enabled then
+      Outputs.LibGBA.Gen_LibGBA_Source
+        (Directory         => Source_Out_Dir.all,
+         Root_Package_Name => Root_Package.all,
+         Map_List          => List);
+   end if;
+
+   if RSTE_Enabled then
+      Outputs.RSTE.Gen_RSTE_Source (Directory        => Source_Out_Dir.all,
+                                    Root_Module_Name => Root_Package.all,
+                                    Format           => Color_Format,
+                                    Map_List         => List);
+   end if;
+
    if PDF_Enabled then
       Outputs.PDF.Gen_PDF_Doc (Doc_Out_Dir.all, "doc.pdf", List);
    end if;
@@ -182,6 +210,8 @@ begin
       end loop;
    end if;
    if not GESTE_Enabled
+     and then
+      not GBA_Enabled
      and then
       not PDF_Enabled
      and then

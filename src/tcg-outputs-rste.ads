@@ -2,7 +2,7 @@
 --                                                                          --
 --                             tiled-code-gen                               --
 --                                                                          --
---                    Copyright (C) 2018 Fabien Chouteau                    --
+--                    Copyright (C) 2020 Fabien Chouteau                    --
 --                                                                          --
 --                                                                          --
 --  Redistribution and use in source and binary forms, with or without      --
@@ -32,32 +32,15 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with DOM.Core;   use DOM.Core;
-with Interfaces; use Interfaces;
+with TCG.Maps.List;
+with TCG.Palette;
 
-package TCG.Utils is
+package TCG.Outputs.RSTE is
 
-   function Item_Exists (N : Node; Item : DOM_String) return Boolean;
+   procedure Gen_RSTE_Source
+     (Directory        : String;
+      Root_Module_Name : String;
+      Format           : Palette.Output_Color_Format;
+      Map_List         : TCG.Maps.List.List);
 
-   function Item_As_Natural (N : Node; Item : DOM_String) return Natural;
-
-   function Item_As_UInt32 (N : Node; Item : DOM_String) return Unsigned_32;
-
-   function Item_As_String (N : Node; Item : DOM_String) return String;
-
-   function Item_As_Float (N : Node; Item : DOM_String) return Float;
-
-   function To_Ada_Identifier (Str : String) return String;
-
-   function To_Ada_Filename (Str     : String;
-                             Is_Spec : Boolean := True)
-                             return String;
-
-   function To_Rust_Identifier (Str : String) return String;
-   function To_Rust_Static_Identifier (Str : String) return String;
-
-   function To_Rust_Filename (Str : String) return String;
-
-   function Make_Dir (Dirpath : String) return Boolean;
-
-end TCG.Utils;
+end TCG.Outputs.RSTE;
