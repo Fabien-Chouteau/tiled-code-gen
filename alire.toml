@@ -1,0 +1,16 @@
+name = "tiled_code_gen"
+description = "Shiny new project"
+version = "0.0.0"
+
+authors = ["Fabien Chouteau"]
+maintainers = ["Fabien Chouteau <fabien.chouteau@gmail.com>"]
+maintainers-logins = ["Fabien-Chouteau"]
+
+executables = ["tiled_code_gen"]
+
+[[depends-on]]
+xmlada = "^21.0.0"
+apdf = "^5.0.0"
+
+[[depends-on]]  # This line was added by `alr with`
+gnatcoll = "^21.0.0"  # This line was added by `alr with`

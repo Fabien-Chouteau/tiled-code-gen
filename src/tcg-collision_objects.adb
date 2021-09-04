@@ -8,11 +8,14 @@ with DOM.Core.Nodes;    use DOM.Core.Nodes;
 
 package body TCG.Collision_Objects is
 
+   type Polygon_Access is access all Polygon;
+
    function To_Float (Str : String) return Float;
    function To_Point (Str : String) return Point;
    function To_Polygon (Offset : Point;
                         Str    : String)
-                        return not null access Polygon;
+                        return not null Polygon_Access;
+
    function Create (N : Node) return Collision_Shape;
    function Inside_Ellipse (Pt      : Point;
                             Ellipse : Polygon)
@@ -43,12 +46,12 @@ package body TCG.Collision_Objects is
 
    function To_Polygon (Offset : Point;
                         Str    : String)
-                        return not null access Polygon
+                        return not null Polygon_Access
    is
       Number_Of_Points : constant Natural :=
         Ada.Strings.Fixed.Count (Str, " ") + 1;
 
-      Ret : constant not null access Polygon
+      Ret : constant not null Polygon_Access
         := new Polygon (1 .. Number_Of_Points);
 
       Index : Natural;

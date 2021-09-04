@@ -17,3 +17,9 @@ lib/
 bin/
 coverage_results/
 tiled_code_gen
+obj/
+lib/
+alire/
+obj/
+lib/
+alire/

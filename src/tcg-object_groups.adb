@@ -45,7 +45,7 @@ package body TCG.Object_Groups is
    function To_Float (Str : String) return Float;
    function To_Point (Str : String) return Point;
    function To_Polygon (Str    : String)
-                        return not null access Polygon;
+                        return not null Polygon_Access;
    function Load (N : Node) return Object;
 
    --------------
@@ -71,12 +71,12 @@ package body TCG.Object_Groups is
    ----------------
 
    function To_Polygon (Str    : String)
-                        return not null access Polygon
+                        return not null Polygon_Access
    is
       Number_Of_Points : constant Natural :=
         Ada.Strings.Fixed.Count (Str, " ") + 1;
 
-      Ret : constant not null access Polygon
+      Ret : constant not null Polygon_Access
         := new Polygon (1 .. Number_Of_Points);
 
       Index : Natural;

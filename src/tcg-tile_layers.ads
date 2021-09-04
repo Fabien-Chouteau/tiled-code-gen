@@ -60,8 +60,8 @@ package TCG.Tile_Layers is
                   X, Y : Natural)
                   return TCG.Tilesets.Map_Tile_Id
      with Pre => This /= No_Layer
-     and then X in 0 .. Width (This) - 1
-     and then Y in 0 .. Height (This) - 1;
+     and then X < Width (This)
+     and then Y < Height (This);
 
    procedure Put (This : Tile_Layer)
      with Pre => This /= No_Layer;
