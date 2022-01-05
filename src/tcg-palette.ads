@@ -66,7 +66,7 @@ package TCG.Palette is
 
    procedure Set_Transparent (C : ARGB_Color)
      with Pre  => (not Transparent_Defined or else Transparent = C)
-                    and then In_Palette (C),
+                    and then not In_Palette (C),
           Post => Transparent_Defined and then Transparent = C;
    --  Set the color that will be treated as transparent.
 
